@@ -58,19 +58,24 @@ def load_static_data():
     sp500_file_url = 'https://raw.githubusercontent.com/Ninokokhre29/sp500-portfolio-optimizer/master/top14_results.csv'
     bond_file_url = 'https://raw.githubusercontent.com/Ninokokhre29/sp500-portfolio-optimizer/master/DGS10.csv'
 
-    st.write(sp500_data.head())
-    st.write(bond_data.head())
-
-
     try:
+        # Load data
         sp500_data = pd.read_csv(sp500_file_url)
         bond_data = pd.read_csv(bond_file_url)
         
+        # Debug: Print column names
         print("SP500 Columns:", sp500_data.columns.tolist())
         print("DGS10 Columns:", bond_data.columns.tolist())
         
+        # Clean column names
         sp500_data.columns = sp500_data.columns.str.strip()
         bond_data.columns = bond_data.columns.str.strip()
+
+        # Display data preview after loading
+        st.write("**SP500 Data Preview:**")
+        st.write(sp500_data.head())
+        st.write("**Bond Data Preview:**")
+        st.write(bond_data.head())
 
         # Convert the 'date' column to datetime for SP500 data
         if 'date' in sp500_data.columns:
@@ -180,6 +185,7 @@ def main():
                 st.session_state.bond_data = bond_data
                 st.session_state.predictions = predictions
                 st.session_state.data_loaded = True
+                st.success("Data loaded successfully!")
             else:
                 st.error("Failed to load data. Please check your file paths and data format.")
                 return
@@ -209,7 +215,157 @@ def main():
     
     # Main content tabs
     tab1, tab2, tab3, tab4 = st.tabs(["📚 Education", "📊 Market Analysis", "🎯 Optimization", "📈 Performance"])
-
+    
+    with tab1:
+        st.header("📚 Educational Content")
+        st.write("""
+        This portfolio optimizer helps you understand and optimize your investment strategy using:
+        - **S&P 500 Data**: Historical performance and predictions
+        - **Bond Data**: Treasury bond rates for risk-free asset allocation
+        - **Machine Learning**: Predictive models for market direction
+        """)
+        
+        if st.button("Show Data Summary"):
+            col1, col2 = st.columns(2)
+            with col1:
+                st.metric("SP500 Records", len(sp500_data))
+                st.metric("Date Range", f"{min_date} to {max_date}")
+            with col2:
+                st.metric("Bond Records", len(bond_data))
+                accuracy = (predictions['y_true'] == predictions['y_pred']).mean()
+                st.metric("Prediction Accuracy", f"{accuracy:.2%}")
+    
+    with tab2:
+        st.header("📊 Market Analysis")
+        
+        # Filter data for selected date
+        selected_data = sp500_data[sp500_data['date'].dt.date == selected_date]
+        
+        if not selected_data.empty:
+            col1, col2 = st.columns(2)
+            
+            with col1:
+                st.subheader("SP500 Performance")
+                row = selected_data.iloc[0]
+                
+                direction_class = "prediction-up" if row['Direction'] == 'up' else "prediction-down"
+                direction_symbol = "📈" if row['Direction'] == 'up' else "📉"
+                
+                st.markdown(f"""
+                <div class="metric-card">
+                    <h4>Market Direction {direction_symbol}</h4>
+                    <p class="{direction_class}">Predicted: {row['Direction'].upper()}</p>
+                    <p>Actual: {row['y_true']:.4f}</p>
+                    <p>Predicted: {row['y_pred']:.4f}</p>
+                </div>
+                """, unsafe_allow_html=True)
+            
+            with col2:
+                st.subheader("Bond Rate")
+                bond_data_filtered = bond_data[bond_data['observation_date'].dt.date <= selected_date]
+                if not bond_data_filtered.empty:
+                    latest_bond = bond_data_filtered.iloc[-1]
+                    st.markdown(f"""
+                    <div class="metric-card">
+                        <h4>10-Year Treasury Rate</h4>
+                        <p style="font-size: 1.5rem; font-weight: bold;">{latest_bond['DGS10']:.2f}%</p>
+                        <p>Date: {latest_bond['observation_date'].strftime('%Y-%m-%d')}</p>
+                    </div>
+                    """, unsafe_allow_html=True)
+        
+        # Charts
+        st.subheader("Historical Performance")
+        
+        # SP500 chart
+        if len(sp500_data) > 1:
+            fig_sp500 = create_line_chart(sp500_data, 'date', 'y_true', 'SP500 Actual Performance')
+            st.plotly_chart(fig_sp500, use_container_width=True)
+        
+        # Bond chart
+        if len(bond_data) > 1:
+            fig_bond = create_line_chart(bond_data, 'observation_date', 'DGS10', '10-Year Treasury Rate', '#ef4444')
+            st.plotly_chart(fig_bond, use_container_width=True)
+    
+    with tab3:
+        st.header("🎯 Portfolio Optimization")
+        
+        st.subheader("Asset Allocation Parameters")
+        
+        col1, col2 = st.columns(2)
+        
+        with col1:
+            risk_tolerance = st.slider("Risk Tolerance", 0.0, 1.0, 0.5, 0.1)
+            expected_return_sp500 = st.number_input("Expected SP500 Return", value=0.10, step=0.01)
+        
+        with col2:
+            risk_free_rate = st.number_input("Risk-Free Rate", value=0.02, step=0.01)
+            expected_return_bonds = st.number_input("Expected Bond Return", value=0.03, step=0.01)
+        
+        if st.button("Optimize Portfolio"):
+            # Simple optimization example
+            returns = np.array([expected_return_sp500, expected_return_bonds])
+            cov_matrix = np.array([[0.04, 0.01], [0.01, 0.01]])  # Example covariance matrix
+            
+            weights, portfolio_return, portfolio_risk, sharpe_ratio = calculate_optimal_weights(returns, cov_matrix, risk_free_rate)
+            
+            col1, col2 = st.columns(2)
+            
+            with col1:
+                st.subheader("Optimal Allocation")
+                fig_pie = create_pie_chart(weights, ['SP500', 'Bonds'])
+                st.plotly_chart(fig_pie, use_container_width=True)
+            
+            with col2:
+                st.subheader("Portfolio Metrics")
+                st.metric("Expected Return", f"{portfolio_return:.2%}")
+                st.metric("Risk (Std Dev)", f"{portfolio_risk:.2%}")
+                st.metric("Sharpe Ratio", f"{sharpe_ratio:.2f}")
+    
+    with tab4:
+        st.header("📈 Performance Tracking")
+        
+        st.subheader("Prediction Accuracy")
+        
+        if len(predictions) > 0:
+            # Calculate accuracy metrics
+            total_predictions = len(predictions)
+            correct_predictions = sum(predictions['y_true'] == predictions['y_pred'])
+            accuracy = correct_predictions / total_predictions
+            
+            col1, col2, col3 = st.columns(3)
+            
+            with col1:
+                st.metric("Total Predictions", total_predictions)
+            with col2:
+                st.metric("Correct Predictions", correct_predictions)
+            with col3:
+                st.metric("Accuracy", f"{accuracy:.2%}")
+            
+            # Performance chart
+            fig_performance = go.Figure()
+            fig_performance.add_trace(go.Scatter(
+                x=predictions['date'],
+                y=predictions['y_true'],
+                mode='lines',
+                name='Actual',
+                line=dict(color='blue')
+            ))
+            fig_performance.add_trace(go.Scatter(
+                x=predictions['date'],
+                y=predictions['y_pred'],
+                mode='lines',
+                name='Predicted',
+                line=dict(color='red', dash='dash')
+            ))
+            
+            fig_performance.update_layout(
+                title="Actual vs Predicted Performance",
+                xaxis_title="Date",
+                yaxis_title="Value",
+                hovermode='x unified'
+            )
+            
+            st.plotly_chart(fig_performance, use_container_width=True)
 
 if __name__ == "__main__":
     main()
