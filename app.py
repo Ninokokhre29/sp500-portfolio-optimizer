@@ -233,29 +233,28 @@ def main():
         """)
 
     if st.button("Show Data Summary"):
-        st.markdown(""" 
-        <style> div[data-testid="metric-container"] > div > div > div[data-testid="metric-value"] {  font-size: 2rem !important; } 
-        div[data-testid="metric-container"] > div > div > div[data-testid="metric-label"] { font-size: 1.2rem !important; } 
+        st.markdown("""
+        <style> div[data-testid="metric-container"] > div > div > div[data-testid="metric-value"] {  
+        font-size: 2rem !important;}  
+        div[data-testid="metric-container"] > div > div > div[data-testid="metric-label"] {font-size: 1.2rem !important;} 
         .big-metric {
-       font-size: 2.5rem !important;
-       font-weight: bold !important; }
-       </style>
-       """, unsafe_allow_html=True)
-   
-       col1, col2 = st.columns(2)
-       with col1: 
-           st.subheader("Dataset Overview") 
-           st.metric("Date Range", f"{min_date} - {max_date}") 
-           st.metric("Total Rows", len(sp500_data)) 
-       with col2: 
-           st.subheader("Model Evaluation") 
-           if len(metrics_data) > 0:
-               metrics_row = metrics_data.iloc[2] 
-               st.metric("Features Used", f"{metrics_row['n_feat_used']}")
-               st.metric("RMSE", f"{metrics_row['rmse']:.4f}") 
-               st.metric("R²", f"{metrics_row['r2']:.4f}")
-               st.metric("Hit Rate", f"{metrics_row['hit_rate']:.2%}")
-    
+        font-size: 2.5rem !important;
+        font-weight: bold !important;}
+        </style> """, unsafe_allow_html=True) 
+        
+        col1, col2 = st.columns(2) 
+        with col1: 
+            st.subheader("📊 Dataset Overview") 
+            st.metric("Date Range", f"{min_date} - {max_date}") 
+            st.metric("Total Rows", len(sp500_data))  
+        with col2:
+            st.subheader("📈 Model Evaluation") 
+            metrics_row = metrics_data.iloc[2]
+            st.metric("Features Used", f"{metrics_row['n_feat_used']}")
+            st.metric("RMSE", f"{metrics_row['rmse']:.4f}") 
+            st.metric("R²", f"{metrics_row['r2']:.4f}")
+            st.metric("Hit Rate", f"{metrics_row['hit_rate']:.2%}")
+            
     with tab2:
         st.header(" Market Analysis")
         selected_data = sp500_data[sp500_data['date'].dt.date == selected_date]
