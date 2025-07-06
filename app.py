@@ -67,21 +67,24 @@ def load_static_data():
         print("SP500 Columns:", sp500_data.columns.tolist())
         print("DGS10 Columns:", bond_data.columns.tolist())
         
-        # Clean column names
-        sp500_data.columns = sp500_data.columns.str.strip()
-        bond_data.columns = bond_data.columns.str.strip()
+        # Clean column names (remove any invisible characters)
+        sp500_data.columns = sp500_data.columns.str.strip().str.replace('\ufeff', '')
+        bond_data.columns = bond_data.columns.str.strip().str.replace('\ufeff', '')
 
         # Display data preview after loading
         st.write("**SP500 Data Preview:**")
         st.write(sp500_data.head())
+        st.write("**SP500 Columns:**", sp500_data.columns.tolist())
         st.write("**Bond Data Preview:**")
         st.write(bond_data.head())
+        st.write("**Bond Columns:**", bond_data.columns.tolist())
 
         # Convert the 'date' column to datetime for SP500 data
         if 'date' in sp500_data.columns:
             sp500_data['date'] = pd.to_datetime(sp500_data['date'])
+            st.write("✅ SP500 date column converted successfully")
         else:
-            st.error("'date' column not found in SP500 data")
+            st.error(f"'date' column not found in SP500 data. Available columns: {sp500_data.columns.tolist()}")
             return None, None, None
         
         # Check if required columns exist
@@ -89,7 +92,10 @@ def load_static_data():
         missing_cols = [col for col in required_sp500_cols if col not in sp500_data.columns]
         if missing_cols:
             st.error(f"Missing columns in SP500 data: {missing_cols}")
+            st.write("Available columns:", sp500_data.columns.tolist())
             return None, None, None
+        else:
+            st.write("✅ Required SP500 columns found")
         
         # Add 'Direction' column based on y_true and y_pred in SP500 data
         sp500_data['Direction'] = np.where(sp500_data['y_pred'] > sp500_data['y_true'], 'up', 'down')
@@ -101,22 +107,23 @@ def load_static_data():
         if 'observation_date' in bond_data.columns:
             # Try different date formats
             try:
-                bond_data['observation_date'] = pd.to_datetime(bond_data['observation_date'], format='%m/%d/%Y')
-            except ValueError:
-                try:
-                    bond_data['observation_date'] = pd.to_datetime(bond_data['observation_date'], format='ISO8601')
-                except ValueError:
-                    # If both fail, let pandas infer the format
-                    bond_data['observation_date'] = pd.to_datetime(bond_data['observation_date'], format='mixed')
+                bond_data['observation_date'] = pd.to_datetime(bond_data['observation_date'])
+                st.write("✅ Bond observation_date column converted successfully")
+            except Exception as e:
+                st.error(f"Error converting bond observation_date: {e}")
+                return None, None, None
         else:
-            st.error("'observation_date' column not found in bond data")
+            st.error(f"'observation_date' column not found in bond data. Available columns: {bond_data.columns.tolist()}")
             return None, None, None
         
         # Check if DGS10 column exists
         if 'DGS10' not in bond_data.columns:
-            st.error("'DGS10' column not found in bond data")
+            st.error(f"'DGS10' column not found in bond data. Available columns: {bond_data.columns.tolist()}")
             return None, None, None
+        else:
+            st.write("✅ DGS10 column found")
         
+        st.write("✅ All data loaded and processed successfully!")
         return sp500_data, bond_data, predictions
         
     except Exception as e:
