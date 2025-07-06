@@ -208,12 +208,44 @@ def main():
     tab1, tab2, tab3, tab4 = st.tabs(["📚 Education", "📊 Market Analysis", "🎯 Optimization", "📈 Performance"])
     
     with tab1:
-        st.header("📚 Educational Content")
-        st.write("""
-        This portfolio optimizer helps you understand and optimize your investment strategy using:
-        - **S&P 500 Data**: Historical performance and predictions
-        - **Bond Data**: Treasury bond rates for risk-free asset allocation
-        - **Machine Learning**: Predictive models for market direction
+        st.header("📚 Financial Education")
+        col1, col2 = st.columns(2)
+        
+        with col1:
+            st.subheader("🏢 S&P 500 Index")
+            st.markdown("""
+            The S&P 500 is a stock market index that tracks the stock performance of 500 large companies 
+            listed on stock exchanges in the United States. It is one of the most commonly followed equity 
+            indices and is considered a benchmark for the overall U.S. stock market.
+            
+            **Key Features:**
+            - Market-cap weighted index
+            - Covers approximately 80% of U.S. equity market capitalization
+            - Rebalanced quarterly
+            - Widely used for benchmarking and passive investing
+            """)
+        
+        with col2:
+            st.subheader("🏦 10-Year Treasury Bond")
+            st.markdown("""
+            The 10-year Treasury note is a debt obligation issued by the United States government 
+            with a maturity of 10 years. It's considered one of the safest investments and serves 
+            as a benchmark for other interest rates.
+            
+            **Key Features:**
+            - Backed by the full faith and credit of the U.S. government
+            - Fixed interest payments every six months
+            - Inverse relationship with interest rates
+            - Used as a risk-free rate in financial models
+            """)
+        
+        st.divider()
+        
+        st.subheader("🎯 Markowitz Portfolio Theory")
+        st.markdown("""
+        Modern Portfolio Theory, introduced by Harry Markowitz, provides a mathematical framework 
+        for assembling a portfolio of assets such that the expected return is maximized for a given 
+        level of risk, or equivalently, the risk is minimized for a given level of expected return.
         """)
         
         if st.button("Show Data Summary"):
@@ -245,9 +277,8 @@ def main():
                 st.markdown(f"""
                 <div class="metric-card">
                     <h4>Market Direction {direction_symbol}</h4>
+                    <p style="font-size: 1.5rem; font-weight: bold;">{row['y_pred']*100:.2f}%</p>
                     <p class="{direction_class}">Predicted: {row['Direction'].upper()}</p>
-                    <p>Actual: {row['y_true']:.4f}</p>
-                    <p>Predicted: {row['y_pred']:.4f}</p>
                 </div>
                 """, unsafe_allow_html=True)
             
@@ -260,7 +291,6 @@ def main():
                     <div class="metric-card">
                         <h4>10-Year Treasury Rate</h4>
                         <p style="font-size: 1.5rem; font-weight: bold;">{latest_bond['DGS10']:.2f}%</p>
-                        <p>Date: {latest_bond['observation_date'].strftime('%Y-%m-%d')}</p>
                     </div>
                     """, unsafe_allow_html=True)
         
