@@ -110,8 +110,8 @@ def create_line_chart(data, x_col, y_col, title, color='#3b82f6', selected_date=
     
     fig.update_layout(
         title=title,
-        xaxis_title=x_col,
-        yaxis_title=y_col,
+        xaxis_title="Date",
+        yaxis_title="S&P 500 Index" if y_col == 'y_true' else y_col,
         hovermode='x unified',
         showlegend=False,
         title_x=0.5
@@ -279,12 +279,12 @@ def main():
         
         st.subheader("Historical Performance")
 
-        if len(sp500_data) > 1:
-            fig_sp500 = create_line_chart(sp500_data, 'date', 'y_true', 'SP500 Actual Performance', '#3b82f6', selected_date)
+        if len(selected_data) > 1:
+            fig_sp500 = create_line_chart(selected_data, 'date', 'y_true', 'SP500 Actual Performance', '#3b82f6', selected_date)
             st.plotly_chart(fig_sp500, use_container_width=True)
         
-        if len(bond_data) > 1:
-            fig_bond = create_line_chart(bond_data, 'observation_date', 'DGS10', '10-Year Treasury Rate', '#ef4444', selected_date)
+        if len(bond_data_filtered) > 1:
+            fig_bond = create_line_chart(bond_data_filtered, 'observation_date', 'DGS10', '10-Year Treasury Rate', '#ef4444', selected_date)
             st.plotly_chart(fig_bond, use_container_width=True)
     
     with tab3:
