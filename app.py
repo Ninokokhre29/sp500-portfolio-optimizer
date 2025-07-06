@@ -280,11 +280,11 @@ def main():
         st.subheader("Historical Performance")
 
         if len(selected_data) > 1:
-            fig_sp500 = create_line_chart(selected_data, 'date', 'y_true', 'SP500 Actual Performance', '#3b82f6', selected_date)
+            fig_sp500 = create_line_chart(selected_data, 'date', 'y_true', 'SP500 Actual Performance', '#3b82f6')
             st.plotly_chart(fig_sp500, use_container_width=True)
         
         if len(bond_data_filtered) > 1:
-            fig_bond = create_line_chart(bond_data_filtered, 'observation_date', 'DGS10', '10-Year Treasury Rate', '#ef4444', selected_date)
+            fig_bond = create_line_chart(bond_data_filtered, 'observation_date', 'DGS10', '10-Year Treasury Rate', '#ef4444')
             st.plotly_chart(fig_bond, use_container_width=True)
     
     with tab3:
