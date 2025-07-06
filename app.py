@@ -234,12 +234,11 @@ def main():
 
     if st.button("Show Data Summary"):
         st.markdown("""
-        <style> div[data-testid="metric-container"] > div > div > div[data-testid="metric-value"] {  
-        font-size: 2rem !important;}  
-        div[data-testid="metric-container"] > div > div > div[data-testid="metric-label"] {font-size: 1.2rem !important;} 
-        .big-metric {
-        font-size: 2.5rem !important;
-        font-weight: bold !important;}
+        </style>
+        div[data-testid="metric-container"] div[data-testid="metric-label"] {
+        font-size: 1.5rem !important;
+        font-weight: 600 !important;
+        color: #34495e; }
         </style> """, unsafe_allow_html=True) 
         
         col1, col2 = st.columns(2) 
@@ -250,9 +249,9 @@ def main():
         with col2:
             st.subheader(" Model Evaluation") 
             metrics_row = metrics_data.iloc[2]
-            st.metric("Features Used", f"{metrics_row['n_feat_used']}")
+            st.metric("Features Used", f"{int(metrics_row['n_feat_used'])}")
             st.metric("RMSE", f"{metrics_row['rmse']:.4f}") 
-            st.metric("R²", f"{metrics_row['r2']:.4f}")
+            st.metric("R²", f"{metrics_row['r2']*100:.2f%}")
             st.metric("Hit Rate", f"{metrics_row['hit_rate']:.2%}")
             
     with tab2:
@@ -276,13 +275,12 @@ def main():
                 """, unsafe_allow_html=True)
             
             with col2:
-                st.subheader("Bond Rate")
+                st.subheader("10-Year Treasury Rate")
                 bond_data_filtered = bond_data[bond_data['observation_date'].dt.date <= selected_date]
                 if not bond_data_filtered.empty:
                     latest_bond = bond_data_filtered.iloc[-1]
                     st.markdown(f"""
                     <div class="metric-card">
-                        <h4>10-Year Treasury Rate</h4>
                         <p style="font-size: 1.5rem; font-weight: bold;">{latest_bond['DGS10']:.2f}%</p>
                     </div>
                     """, unsafe_allow_html=True)
