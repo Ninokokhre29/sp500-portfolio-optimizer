@@ -251,7 +251,11 @@ def main():
             metrics_row = metrics_data.iloc[2]
             st.metric("Features Used", f"{int(metrics_row['n_feat_used'])}")
             st.metric("RMSE", f"{metrics_row['rmse']:.4f}") 
-            st.metric("R²", f"{metrics_row['r2']:.4f}")
+            r2_value = metrics_row['r2'] 
+            if pd.notnull(r2_value):
+                st.metric("R²", f"{r2_value * 100:.2f}%")
+            else:
+                st.metric("R²", "N/A")
             st.metric("Hit Rate", f"{metrics_row['hit_rate']:.2%}")
             
     with tab2:
