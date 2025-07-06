@@ -244,11 +244,11 @@ def main():
         
         col1, col2 = st.columns(2) 
         with col1: 
-            st.subheader("📊 Dataset Overview") 
+            st.subheader(" Dataset Overview") 
             st.metric("Date Range", f"{min_date} - {max_date}") 
             st.metric("Total Rows", len(sp500_data))  
         with col2:
-            st.subheader("📈 Model Evaluation") 
+            st.subheader(" Model Evaluation") 
             metrics_row = metrics_data.iloc[2]
             st.metric("Features Used", f"{metrics_row['n_feat_used']}")
             st.metric("RMSE", f"{metrics_row['rmse']:.4f}") 
@@ -270,7 +270,6 @@ def main():
                 
                 st.markdown(f"""
                 <div class="metric-card">
-                    <h4>Market Direction {direction_symbol}</h4>
                     <p style="font-size: 1.5rem; font-weight: bold;">{row['y_pred']*100:.2f}%</p>
                     <p class="{direction_class}">Predicted: {row['Direction'].upper()}</p>
                 </div>
