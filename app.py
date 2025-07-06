@@ -7,14 +7,12 @@ import warnings
 import os
 warnings.filterwarnings('ignore')
 
-# Set page config
 st.set_page_config(
     page_title="SP500 Portfolio Optimizer",
     page_icon="📈",
     layout="wide"
 )
 
-# Custom CSS
 st.markdown("""
 <style>
     .main-header {
@@ -41,7 +39,6 @@ st.markdown("""
 </style>
 """, unsafe_allow_html=True)
 
-# Initialize session state
 if 'sp500_data' not in st.session_state:
     st.session_state.sp500_data = None
 if 'bond_data' not in st.session_state:
@@ -51,74 +48,61 @@ if 'predictions' not in st.session_state:
 if 'data_loaded' not in st.session_state:
     st.session_state.data_loaded = False
 
-# Helper functions
 def load_static_data():
-    """Load actual CSV data directly (e.g., DGS10 returns, SP500, actual returns, predicted returns)"""
-    
     sp500_file_url = 'https://raw.githubusercontent.com/Ninokokhre29/sp500-portfolio-optimizer/master/top14_results.csv'
-    bond_file_url = 'https://raw.githubusercontent.com/Ninokokhre29/sp500-portfolio-optimizer/master/DGS10.csv'
-
+    bond_file_url = 'https://raw.githubusercontent.com/Ninokokhre29/sp500-portfolio-optimizer/master/DGS10.csv' 
+    metrics_url = 'https://raw.githubusercontent.com/Ninokokhre29/sp500-portfolio-optimizer/master/metrics.xlsx' 
+    
     try:
-        # Load data
-        sp500_data = pd.read_csv(sp500_file_url)
-        bond_data = pd.read_csv(bond_file_url)
+        sp500_data = pd.read_csv(sp500_file_url) 
+        bond_data = pd.read_csv(bond_file_url) 
+    
+        import requests
+        from io import BytesIO 
+        response = requests.get(metrics_url) 
+        metrics_data = pd.read_excel(BytesIO(response.content))
         
-        # Debug: Print column names
-        print("SP500 Columns:", sp500_data.columns.tolist())
-        print("DGS10 Columns:", bond_data.columns.tolist())
-        
-        # Clean column names (remove any invisible characters)
         sp500_data.columns = sp500_data.columns.str.strip().str.replace('\ufeff', '')
         bond_data.columns = bond_data.columns.str.strip().str.replace('\ufeff', '')
-
-        
-        # Convert the 'date' column to datetime for SP500 data
+    
         if 'date' in sp500_data.columns:
             sp500_data['date'] = pd.to_datetime(sp500_data['date'])
         else:
             st.error(f"'date' column not found in SP500 data. Available columns: {sp500_data.columns.tolist()}")
-            return None, None, None
+            return None, None, None, None
         
-        # Check if required columns exist
         required_sp500_cols = ['y_true', 'y_pred']
         missing_cols = [col for col in required_sp500_cols if col not in sp500_data.columns]
         if missing_cols:
             st.error(f"Missing columns in SP500 data: {missing_cols}")
             st.write("Available columns:", sp500_data.columns.tolist())
-            return None, None, None
-        
-        # Add 'Direction' column based on y_true and y_pred in SP500 data
+            return None, None, None, None
+    
         sp500_data['Direction'] = np.where(sp500_data['y_pred'] > sp500_data['y_true'], 'up', 'down')
-
-        # For predictions, adjust based on your actual data columns and structure
         predictions = sp500_data[['date', 'y_true', 'y_pred', 'Direction']].copy()
-
-        # Convert 'observation_date' to datetime for DGS10 data
+        
         if 'observation_date' in bond_data.columns:
-            # Try different date formats
-            try:
+            try: 
                 bond_data['observation_date'] = pd.to_datetime(bond_data['observation_date'])
             except Exception as e:
                 st.error(f"Error converting bond observation_date: {e}")
-                return None, None, None
+                return None, None, None, None
         else:
             st.error(f"'observation_date' column not found in bond data. Available columns: {bond_data.columns.tolist()}")
-            return None, None, None
-        
-        # Check if DGS10 column exists
+            return None, None, None, None
+
         if 'DGS10' not in bond_data.columns:
             st.error(f"'DGS10' column not found in bond data. Available columns: {bond_data.columns.tolist()}")
-            return None, None, None
-        return sp500_data, bond_data, predictions
+            return None, None, None, None
+        return sp500_data, bond_data, predictions, metrics_data
         
     except Exception as e:
         st.error(f"Error loading data: {str(e)}")
-        return None, None, None
+        print(f"Detailed error: {e}")
+        return None, None, None, None
 
 def calculate_optimal_weights(expected_returns, cov_matrix, risk_free_rate=0.02):
     n = len(expected_returns)
-    
-    # For demonstration - replace with your actual optimization
     weights = np.random.dirichlet(np.ones(n), size=1)[0]
     
     portfolio_return = np.dot(weights, expected_returns)
@@ -128,28 +112,24 @@ def calculate_optimal_weights(expected_returns, cov_matrix, risk_free_rate=0.02)
     return weights, portfolio_return, portfolio_risk, sharpe_ratio
 
 def create_line_chart(data, x_col, y_col, title, color='#3b82f6'):
-    """Create a line chart using Plotly"""
     fig = go.Figure()
     fig.add_trace(go.Scatter(
         x=data[x_col],
         y=data[y_col],
         mode='lines',
         name=title,
-        line=dict(color=color, width=2)
-    ))
+        line=dict(color=color, width=2) ))
     
     fig.update_layout(
         title=title,
         xaxis_title=x_col,
         yaxis_title=y_col,
         hovermode='x unified',
-        showlegend=False
-    )
+        showlegend=False )
     
     return fig
 
 def create_pie_chart(weights, labels):
-    """Create a pie chart for portfolio allocation"""
     fig = go.Figure(data=[go.Pie(
         labels=labels,
         values=weights,
@@ -167,7 +147,6 @@ def create_pie_chart(weights, labels):
 def main():
     st.markdown('<h1 class="main-header">📈 SP500 Portfolio Optimizer</h1>', unsafe_allow_html=True)
     
-    # Load static data
     if not st.session_state.data_loaded:
         with st.spinner("Loading data..."):
             sp500_data, bond_data, predictions = load_static_data()
@@ -180,8 +159,7 @@ def main():
             else:
                 st.error("Failed to load data. Please check your file paths and data format.")
                 return
-    
-    # Check if data is loaded
+
     if not st.session_state.data_loaded:
         st.error("Data not loaded. Please check your file paths.")
         return
@@ -190,10 +168,8 @@ def main():
     bond_data = st.session_state.bond_data
     predictions = st.session_state.predictions
     
-    # Date selection
     st.subheader("📅 Select Analysis Date")
     
-    # Get date range from data
     min_date = sp500_data['date'].min().date()
     max_date = sp500_data['date'].max().date()
     
@@ -204,7 +180,6 @@ def main():
         max_value=max_date
     )
     
-    # Main content tabs
     tab1, tab2, tab3, tab4 = st.tabs(["📚 Education", "📊 Market Analysis", "🎯 Optimization", "📈 Performance"])
     
     with tab1:
@@ -247,21 +222,25 @@ def main():
         for assembling a portfolio of assets such that the expected return is maximized for a given 
         level of risk, or equivalently, the risk is minimized for a given level of expected return.
         """)
+
+        st.subheader("🤖 About the Model")
+        st.markdown("""
+        A a comprehensive machine learning pipeline for predicting S&P 500 stock returns using a walk-forward validation approach with LightGBM models. The system engineers over 60 technical and fundamental features including moving averages, momentum indicators, volatility measures, volume patterns, and macroeconomic variables, then applies feature selection techniques to identify the most predictive variables. Using time series cross-validation and hyperparameter optimization, the model predicts future 20-day returns while avoiding look-ahead bias through proper temporal splitting. The pipeline incorporates SHAP (SHapley Additive exPlanations) values to identify stable, high-importance features across multiple time periods, systematically testing different feature set sizes to optimize the balance between model complexity and predictive performance. Results are evaluated using multiple metrics including RMSE, R-squared, and directional accuracy (hit rate), with the system designed to handle the non-stationary nature of financial markets through robust preprocessing and validation methodologies.
+        """)
         
         if st.button("Show Data Summary"):
             col1, col2 = st.columns(2)
             with col1:
-                st.metric("SP500 Records", len(sp500_data))
                 st.metric("Date Range", f"{min_date} to {max_date}")
             with col2:
-                st.metric("Bond Records", len(bond_data))
-                accuracy = (predictions['y_true'] == predictions['y_pred']).mean()
-                st.metric("Prediction Accuracy", f"{accuracy:.2%}")
+                st.subheader("📊 Model Evaluation")
+                st.metric("Num. of Features", f"{metric_data['n_feat_used']:.2%}")
+                st.metric("RMSE", f"{metric_data['rmse']:.2%}")
+                st.metric("R²", f"{metric_data['r2']:.2%}")
+                st.metric("Hit rate", f"{metric_data['hit_rate']:.2%}")
     
     with tab2:
         st.header("📊 Market Analysis")
-        
-        # Filter data for selected date
         selected_data = sp500_data[sp500_data['date'].dt.date == selected_date]
         
         if not selected_data.empty:
@@ -294,15 +273,12 @@ def main():
                     </div>
                     """, unsafe_allow_html=True)
         
-        # Charts
         st.subheader("Historical Performance")
-        
-        # SP500 chart
+
         if len(sp500_data) > 1:
             fig_sp500 = create_line_chart(sp500_data, 'date', 'y_true', 'SP500 Actual Performance')
             st.plotly_chart(fig_sp500, use_container_width=True)
         
-        # Bond chart
         if len(bond_data) > 1:
             fig_bond = create_line_chart(bond_data, 'observation_date', 'DGS10', '10-Year Treasury Rate', '#ef4444')
             st.plotly_chart(fig_bond, use_container_width=True)
@@ -323,9 +299,8 @@ def main():
             expected_return_bonds = st.number_input("Expected Bond Return", value=0.03, step=0.01)
         
         if st.button("Optimize Portfolio"):
-            # Simple optimization example
             returns = np.array([expected_return_sp500, expected_return_bonds])
-            cov_matrix = np.array([[0.04, 0.01], [0.01, 0.01]])  # Example covariance matrix
+            cov_matrix = np.array([[0.04, 0.01], [0.01, 0.01]]) 
             
             weights, portfolio_return, portfolio_risk, sharpe_ratio = calculate_optimal_weights(returns, cov_matrix, risk_free_rate)
             
@@ -348,7 +323,6 @@ def main():
         st.subheader("Prediction Accuracy")
         
         if len(predictions) > 0:
-            # Calculate accuracy metrics
             total_predictions = len(predictions)
             correct_predictions = sum(predictions['y_true'] == predictions['y_pred'])
             accuracy = correct_predictions / total_predictions
@@ -361,8 +335,7 @@ def main():
                 st.metric("Correct Predictions", correct_predictions)
             with col3:
                 st.metric("Accuracy", f"{accuracy:.2%}")
-            
-            # Performance chart
+    
             fig_performance = go.Figure()
             fig_performance.add_trace(go.Scatter(
                 x=predictions['date'],
