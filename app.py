@@ -175,7 +175,6 @@ def main():
                 st.session_state.predictions = predictions
                 st.session_state.metrics_data = metrics_data
                 st.session_state.data_loaded = True
-                st.success("Data loaded successfully!")
             else:
                 st.error("Failed to load data. Please check your file paths and data format.")
                 return
