@@ -255,7 +255,7 @@ def main():
                 st.markdown(f"""
                 <div class="metric-card">
                     <p style="font-size: 1.5rem; font-weight: bold;">{row['y_pred']*100:.2f}%</p>
-                    <p class="{direction_class}">Predicted: {row['Direction'].upper()}</p>
+                    <p class="{direction_class}">Direction: {row['Direction'].upper()}</p>
                 </div>
                 """, unsafe_allow_html=True)
             
