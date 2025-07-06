@@ -56,7 +56,7 @@ def load_static_data():
     """Load actual CSV data directly (e.g., DGS10 returns, SP500, actual returns, predicted returns)"""
     
     sp500_file_url = 'https://raw.githubusercontent.com/Ninokokhre29/sp500-portfolio-optimizer/master/top14_results.csv'
-    bond_file_url = 'https://raw.githubusercontent.com/Ninokokhre29/sp500-portfolio-optimizer/master/DGS10.csv
+    bond_file_url = 'https://raw.githubusercontent.com/Ninokokhre29/sp500-portfolio-optimizer/master/DGS10.csv'
 
     st.write(sp500_data.head())
     st.write(bond_data.head())
