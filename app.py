@@ -164,7 +164,6 @@ def main():
     max_date = sp500_data['date'].max().date()
     
     selected_date = st.date_input(
-        "Choose Date",
         value=min_date,
         min_value=min_date,
         max_value=max_date
