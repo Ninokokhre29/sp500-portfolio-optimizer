@@ -55,53 +55,21 @@ def load_static_data():
     bond_file_url = 'https://raw.githubusercontent.com/Ninokokhre29/sp500-portfolio-optimizer/master/DGS10.csv' 
     metrics_url = 'https://raw.githubusercontent.com/Ninokokhre29/sp500-portfolio-optimizer/master/metrics.xlsx' 
     
-    try:
-        sp500_data = pd.read_csv(sp500_file_url) 
-        bond_data = pd.read_csv(bond_file_url) 
-    
-        response = requests.get(metrics_url) 
-        metrics_data = pd.read_excel(BytesIO(response.content))
+    sp500_data = pd.read_csv(sp500_file_url) 
+    bond_data = pd.read_csv(bond_file_url) 
+    response = requests.get(metrics_url) 
+    metrics_data = pd.read_excel(BytesIO(response.content))
         
-        sp500_data.columns = sp500_data.columns.str.strip().str.replace('\ufeff', '')
-        bond_data.columns = bond_data.columns.str.strip().str.replace('\ufeff', '')
-        metrics_data.columns = metrics_data.columns.str.strip().str.replace('\ufeff', '')
+    sp500_data.columns = sp500_data.columns.str.strip().str.replace('\ufeff', '')
+    bond_data.columns = bond_data.columns.str.strip().str.replace('\ufeff', '')
+    metrics_data.columns = metrics_data.columns.str.strip().str.replace('\ufeff', '')
     
-        if 'date' in sp500_data.columns:
-            sp500_data['date'] = pd.to_datetime(sp500_data['date'])
-        else:
-            st.error(f"'date' column not found in SP500 data. Available columns: {sp500_data.columns.tolist()}")
-            return None, None, None, None
-    
-        required_sp500_cols = ['y_true', 'y_pred']
-        missing_cols = [col for col in required_sp500_cols if col not in sp500_data.columns]
-        if missing_cols:
-            st.error(f"Missing columns in SP500 data: {missing_cols}")
-            st.write("Available columns:", sp500_data.columns.tolist())
-            return None, None, None, None
-
-        sp500_data['Direction'] = np.where(sp500_data['y_pred'] > sp500_data['y_true'], 'up', 'down')
-        predictions = sp500_data[['date', 'y_true', 'y_pred', 'Direction']].copy()
-        
-        if 'observation_date' in bond_data.columns:
-            try: 
-                bond_data['observation_date'] = pd.to_datetime(bond_data['observation_date'])
-            except Exception as e:
-                st.error(f"Error converting bond observation_date: {e}")
-                return None, None, None, None
-        else:
-            st.error(f"'observation_date' column not found in bond data. Available columns: {bond_data.columns.tolist()}")
-            return None, None, None, None
-
-        if 'DGS10' not in bond_data.columns:
-            st.error(f"'DGS10' column not found in bond data. Available columns: {bond_data.columns.tolist()}")
-            return None, None, None, None
-            
-        return sp500_data, bond_data, predictions, metrics_data
-        
-    except Exception as e:
-        st.error(f"Error loading data: {str(e)}")
-        print(f"Detailed error: {e}")
-        return None, None, None, None
+    sp500_data['date'] = pd.to_datetime(sp500_data['date'])
+    sp500_data['Direction'] = np.where(sp500_data['y_pred'] > sp500_data['y_true'].shift(1), 'up', 'down')
+    predictions = sp500_data[['date', 'y_true', 'y_pred', 'Direction']].copy()
+    bond_data['observation_date'] = pd.to_datetime(bond_data['observation_date'])
+    bond_data['Direction'] = np.where(bond_data['DGS10'] > bond_data['DGS10'].shift(1), 'up', 'down') 
+    return sp500_data, bond_data, predictions, metrics_data
 
 def calculate_optimal_weights(expected_returns, cov_matrix, risk_free_rate=0.02):
     n = len(expected_returns)
@@ -181,10 +149,10 @@ def main():
         max_value=max_date
     )
     
-    tab1, tab2, tab3, tab4 = st.tabs(["Education", "Market Analysis", "Optimization", "Performance"])
+    tab1, tab2, tab3, tab4 = st.tabs(["Overview", "Market Analysis", "Optimization", "Performance"])
     
     with tab1:
-        st.header("Financial Education")
+        st.header("Financial Overview")
         col1, col2 = st.columns(2)
         
         with col1:
@@ -251,16 +219,13 @@ def main():
             metrics_row = metrics_data.iloc[2]
             st.metric("Features Used", f"{int(metrics_row['n_feat_used'])}")
             st.metric("RMSE", f"{metrics_row['rmse']:.4f}") 
-            r2_value = metrics_row['r2'] 
-            if pd.notnull(r2_value):
-                st.metric("R²", f"{r2_value * 100:.2f}%")
-            else:
-                st.metric("R²", "N/A")
+            st.metric("R²", f"{metrics_row['r2'] * 100:.2f}%")
             st.metric("Hit Rate", f"{metrics_row['hit_rate']:.2%}")
             
     with tab2:
-        st.header(" Market Analysis")
-        selected_data = sp500_data[sp500_data['date'].dt.date == selected_date]
+        st.header("Market Analysis")
+        selected_data = sp500_data[sp500_data['date'].dt.date <= selected_date]
+        bond_data_filtered = bond_data[bond_data['observation_date'].dt.date <= selected_date]
         
         if not selected_data.empty:
             col1, col2 = st.columns(2)
@@ -268,9 +233,8 @@ def main():
             with col1:
                 st.subheader("SP500 Performance")
                 row = selected_data.iloc[0]
-            
                 direction_class = "prediction-up" if row['Direction'] == 'up' else "prediction-down"
-                
+    
                 st.markdown(f"""
                 <div class="metric-card">
                     <p style="font-size: 1.5rem; font-weight: bold;">{row['y_pred']*100:.2f}%</p>
@@ -280,12 +244,15 @@ def main():
             
             with col2:
                 st.subheader("10-Year Treasury Rate")
-                bond_data_filtered = bond_data[bond_data['observation_date'].dt.date <= selected_date]
                 if not bond_data_filtered.empty:
                     latest_bond = bond_data_filtered.iloc[-1]
+                    bond_direction = latest_bond['Direction'].upper()
+                    bond_color_class = "prediction-up" if bond_direction == "UP" else "prediction-down"
+                    
                     st.markdown(f"""
                     <div class="metric-card">
                         <p style="font-size: 1.5rem; font-weight: bold;">{latest_bond['DGS10']:.2f}%</p>
+                        <p class="{bond_color_class}">Direction: {bond_direction}</p>
                     </div>
                     """, unsafe_allow_html=True)
                 else:
@@ -293,14 +260,30 @@ def main():
         else:
             st.warning("No data available for the selected date")
         
-        st.subheader("Historical Performance")
+        st.subheader("\n Historical Performance")
+
+        import plotly.express as px 
+        import plotly.graph_objects as go 
+        
+        def create_custom_line_chart(df, x_col, y_col, title, line_color='#3b82f6', selected_date=None):   
+            fig = px.line(df, x=x_col, y=y_col, title=title)
+            fig.update_traces(line=dict(color=line_color)) 
+            
+            if selected_date: 
+                if x_col == 'date' or x_col == 'observation_date': 
+                    fig.add_vline(x=selected_date, line_width=2, line_dash="dash", line_color="green")
+                else:
+                    fig.add_hline(y=selected_date, line_width=2, line_dash="dash", line_color="green")
+
+            fig.update_layout(title_x=0.5)
+            return fig
 
         if len(sp500_data) > 1:
-            fig_sp500 = create_line_chart(sp500_data, 'date', 'y_true', 'SP500 Actual Performance')
+            fig_sp500 = create_line_chart(sp500_data, 'date', 'y_true', 'SP500 Actual Performance', '#3b82f6', selected_date)
             st.plotly_chart(fig_sp500, use_container_width=True)
         
         if len(bond_data) > 1:
-            fig_bond = create_line_chart(bond_data, 'observation_date', 'DGS10', '10-Year Treasury Rate', '#ef4444')
+            fig_bond = create_line_chart(bond_data, 'observation_date', 'DGS10', '10-Year Treasury Rate', '#ef4444', selected_date)
             st.plotly_chart(fig_bond, use_container_width=True)
     
     with tab3:
