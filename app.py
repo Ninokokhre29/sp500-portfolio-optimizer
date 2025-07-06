@@ -86,8 +86,6 @@ def load_static_data():
             st.error(f"Missing columns in SP500 data: {missing_cols}")
             st.write("Available columns:", sp500_data.columns.tolist())
             return None, None, None
-        else:
-            st.write("✅ Required SP500 columns found")
         
         # Add 'Direction' column based on y_true and y_pred in SP500 data
         sp500_data['Direction'] = np.where(sp500_data['y_pred'] > sp500_data['y_true'], 'up', 'down')
@@ -100,7 +98,6 @@ def load_static_data():
             # Try different date formats
             try:
                 bond_data['observation_date'] = pd.to_datetime(bond_data['observation_date'])
-                st.write("✅ Bond observation_date column converted successfully")
             except Exception as e:
                 st.error(f"Error converting bond observation_date: {e}")
                 return None, None, None
@@ -112,8 +109,6 @@ def load_static_data():
         if 'DGS10' not in bond_data.columns:
             st.error(f"'DGS10' column not found in bond data. Available columns: {bond_data.columns.tolist()}")
             return None, None, None
-        else:
-            st.write("✅ DGS10 column found")
         return sp500_data, bond_data, predictions
         
     except Exception as e:
@@ -182,7 +177,6 @@ def main():
                 st.session_state.bond_data = bond_data
                 st.session_state.predictions = predictions
                 st.session_state.data_loaded = True
-                st.success("Data loaded successfully!")
             else:
                 st.error("Failed to load data. Please check your file paths and data format.")
                 return
