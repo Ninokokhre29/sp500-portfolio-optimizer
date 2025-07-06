@@ -95,24 +95,15 @@ def calculate_optimal_weights(expected_returns, cov_matrix, risk_free_rate=0.02)
     
     return weights, portfolio_return, portfolio_risk, sharpe_ratio
 
-def create_line_chart(data, x_col, y_col, title, color='#3b82f6', selected_date=None, show_prediction=False):
+def create_line_chart(data, x_col, y_col, title, color='#3b82f6', selected_date=None):
     fig = go.Figure()
     fig.add_trace(go.Scatter(
         x=data[x_col],
         y=data[y_col],
         mode='lines',
-        name=title if show_prediction else title,
+        name=title,
         line=dict(color=color, width=2)
     ))
-
-    if show_prediction and 'y_pred' in data.columns:
-        fig.add_trace(go.Scatter(
-            x=data[x_col],
-            y=data['y_pred'],
-            mode='lines',
-            name='Predicted',
-            line=dict(color='red', width=2, dash='dash')
-        ))
     
     if selected_date:
         fig.add_vline(x=selected_date, line_width=2, line_dash="dash", line_color="green")
@@ -122,7 +113,6 @@ def create_line_chart(data, x_col, y_col, title, color='#3b82f6', selected_date=
         xaxis_title="Date",
         yaxis_title="S&P 500 Index" if y_col == 'y_true' else y_col,
         hovermode='x unified',
-        showlegend=show_prediction,
         title_x=0.5
     )
     
@@ -290,11 +280,11 @@ def main():
         st.subheader("Historical Performance")
 
         if len(selected_data) > 1:
-            fig_sp500 = create_line_chart(selected_data, 'date', 'y_true', 'SP500 Actual Performance', '#3b82f6', selected_date, show_prediction=True)
+            fig_sp500 = create_line_chart(selected_data, 'date', 'y_true', 'SP500 Actual Performance', '#3b82f6')
             st.plotly_chart(fig_sp500, use_container_width=True)
         
         if len(bond_data_filtered) > 1:
-            fig_bond = create_line_chart(bond_data_filtered, 'observation_date', 'DGS10', '10-Year Treasury Rate', '#ef4444', selected_date)
+            fig_bond = create_line_chart(bond_data_filtered, 'observation_date', 'DGS10', '10-Year Treasury Rate', '#ef4444')
             st.plotly_chart(fig_bond, use_container_width=True)
     
     with tab3:
