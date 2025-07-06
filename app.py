@@ -204,11 +204,28 @@ def main():
         
         st.divider()
         
-        st.subheader("Markowitz Portfolio Theory")
         st.markdown("""
-        Modern Portfolio Theory, introduced by Harry Markowitz, provides a mathematical framework for assembling a portfolio of assets such that the expected return is 
-        maximized for a given level of risk, or equivalently, the risk is minimized for a given level of expected return.
-        """)
+        <div style="background-color: white; border-radius: 0.5rem; box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1); padding: 1.5rem; margin: 1rem 0;">
+            <h2 style="font-size: 1.5rem; font-weight: bold; color: #111827; margin-bottom: 1rem;">Markowitz Portfolio Theory</h2>
+            <div style="color: #374151; margin-bottom: 1rem;">
+                <p>Modern Portfolio Theory, introduced by Harry Markowitz, provides a mathematical framework for assembling a portfolio of assets such that the expected return is maximized for a given level of risk, or equivalently, the risk is minimized for a given level of expected return.</p>
+            </div>
+            <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(250px, 1fr)); gap: 1rem; margin-top: 1rem;">
+                <div style="background-color: #faf5ff; padding: 1rem; border-radius: 0.5rem;">
+                    <h3 style="font-weight: 600; color: #581c87; margin-bottom: 0.5rem;">Diversification</h3>
+                    <p style="color: #6b21a8; font-size: 0.875rem;">Reduces portfolio risk by combining assets with different risk-return profiles</p>
+                </div>
+                <div style="background-color: #faf5ff; padding: 1rem; border-radius: 0.5rem;">
+                    <h3 style="font-weight: 600; color: #581c87; margin-bottom: 0.5rem;">Efficient Frontier</h3>
+                    <p style="color: #6b21a8; font-size: 0.875rem;">The set of optimal portfolios offering the highest expected return for each level of risk</p>
+                </div>
+                <div style="background-color: #faf5ff; padding: 1rem; border-radius: 0.5rem;">
+                    <h3 style="font-weight: 600; color: #581c87; margin-bottom: 0.5rem;">Risk-Return Tradeoff</h3>
+                    <p style="color: #6b21a8; font-size: 0.875rem;">Balances expected returns against the volatility of those returns</p>
+                </div>
+            </div>
+        </div>
+        """, unsafe_allow_html=True)
 
         st.subheader("About the Model")
         st.markdown("""
