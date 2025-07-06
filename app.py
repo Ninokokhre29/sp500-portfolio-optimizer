@@ -71,27 +71,10 @@ def load_static_data():
         sp500_data.columns = sp500_data.columns.str.strip().str.replace('\ufeff', '')
         bond_data.columns = bond_data.columns.str.strip().str.replace('\ufeff', '')
 
-        # Display data preview after loading
-        st.write("**SP500 Data Preview:**")
-        st.write(sp500_data.head())
-        st.write("**SP500 Columns:**", sp500_data.columns.tolist())
-        st.write("**Bond Data Preview:**")
-        st.write(bond_data.head())
-        st.write("**Bond Columns:**", bond_data.columns.tolist())
-
-        # Check for Git merge conflict markers
-        if any('<<<<<<< HEAD' in str(col) for col in sp500_data.columns):
-            st.error("🚨 **Git Merge Conflict Detected in SP500 Data!**")
-            st.error("Your CSV file contains Git merge conflict markers.")
-            st.error("Please fix the merge conflict in your 'top14_results.csv' file.")
-            st.error("Remove lines containing: <<<<<<< HEAD, =======, >>>>>>> branch-name")
-            st.error("Keep only the actual CSV data with headers: date,y_true,y_pred")
-            return None, None, None
         
         # Convert the 'date' column to datetime for SP500 data
         if 'date' in sp500_data.columns:
             sp500_data['date'] = pd.to_datetime(sp500_data['date'])
-            st.write("✅ SP500 date column converted successfully")
         else:
             st.error(f"'date' column not found in SP500 data. Available columns: {sp500_data.columns.tolist()}")
             return None, None, None
@@ -131,8 +114,6 @@ def load_static_data():
             return None, None, None
         else:
             st.write("✅ DGS10 column found")
-        
-        st.write("✅ All data loaded and processed successfully!")
         return sp500_data, bond_data, predictions
         
     except Exception as e:
