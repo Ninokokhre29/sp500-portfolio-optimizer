@@ -56,8 +56,8 @@ if 'data_loaded' not in st.session_state:
 def load_static_data():
     """Load actual CSV data directly (e.g., DGS10 returns, SP500, actual returns, predicted returns)"""
     
-    sp500_file_url = 'https://raw.githubusercontent.com/Ninokokhre29/sp500-portfolio-optimizer/main/top14_results.csv'
-    bond_file_url = 'https://raw.githubusercontent.com/Ninokokhre29/sp500-portfolio-optimizer/main/DGS10.csv'
+    sp500_file_url = 'https://github.com/Ninokokhre29/sp500-portfolio-optimizer/blob/master/top14_results.csv'
+    bond_file_url = 'https://github.com/Ninokokhre29/sp500-portfolio-optimizer/blob/master/DGS10.csv'
     
 
     try:
