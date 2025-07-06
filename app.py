@@ -2,6 +2,7 @@ import streamlit as st
 import pandas as pd
 import numpy as np
 import plotly.graph_objects as go
+import plotly.express as px
 from datetime import datetime, date
 import warnings
 import requests
@@ -11,7 +12,8 @@ warnings.filterwarnings('ignore')
 
 st.set_page_config(
     page_title="SP500 Portfolio Optimizer",
-    layout="wide" )
+    layout="wide"
+)
 
 st.markdown("""
 <style>
@@ -36,6 +38,11 @@ st.markdown("""
         color: #ef4444;
         font-weight: bold;
     }
+    div[data-testid="metric-container"] div[data-testid="metric-label"] {
+        font-size: 1.5rem !important;
+        font-weight: 600 !important;
+        color: #34495e !important;
+    }
 </style>
 """, unsafe_allow_html=True)
 
@@ -51,25 +58,32 @@ if 'data_loaded' not in st.session_state:
     st.session_state.data_loaded = False
 
 def load_static_data():
-    sp500_file_url = 'https://raw.githubusercontent.com/Ninokokhre29/sp500-portfolio-optimizer/master/top14_results.csv'
-    bond_file_url = 'https://raw.githubusercontent.com/Ninokokhre29/sp500-portfolio-optimizer/master/DGS10.csv' 
-    metrics_url = 'https://raw.githubusercontent.com/Ninokokhre29/sp500-portfolio-optimizer/master/metrics.xlsx' 
-    
-    sp500_data = pd.read_csv(sp500_file_url) 
-    bond_data = pd.read_csv(bond_file_url) 
-    response = requests.get(metrics_url) 
-    metrics_data = pd.read_excel(BytesIO(response.content))
+    try:
+        sp500_file_url = 'https://raw.githubusercontent.com/Ninokokhre29/sp500-portfolio-optimizer/master/top14_results.csv'
+        bond_file_url = 'https://raw.githubusercontent.com/Ninokokhre29/sp500-portfolio-optimizer/master/DGS10.csv'
+        metrics_url = 'https://raw.githubusercontent.com/Ninokokhre29/sp500-portfolio-optimizer/master/metrics.xlsx'
         
-    sp500_data.columns = sp500_data.columns.str.strip().str.replace('\ufeff', '')
-    bond_data.columns = bond_data.columns.str.strip().str.replace('\ufeff', '')
-    metrics_data.columns = metrics_data.columns.str.strip().str.replace('\ufeff', '')
-    
-    sp500_data['date'] = pd.to_datetime(sp500_data['date'])
-    sp500_data['Direction'] = np.where(sp500_data['y_pred'] > sp500_data['y_true'].shift(1), 'up', 'down')
-    predictions = sp500_data[['date', 'y_true', 'y_pred', 'Direction']].copy()
-    bond_data['observation_date'] = pd.to_datetime(bond_data['observation_date'])
-    bond_data['Direction'] = np.where(bond_data['DGS10'] > bond_data['DGS10'].shift(1), 'up', 'down') 
-    return sp500_data, bond_data, predictions, metrics_data
+        sp500_data = pd.read_csv(sp500_file_url)
+        bond_data = pd.read_csv(bond_file_url)
+        response = requests.get(metrics_url)
+        response.raise_for_status()
+        metrics_data = pd.read_excel(BytesIO(response.content))
+        
+        sp500_data.columns = sp500_data.columns.str.strip().str.replace('\ufeff', '')
+        bond_data.columns = bond_data.columns.str.strip().str.replace('\ufeff', '')
+        metrics_data.columns = metrics_data.columns.str.strip().str.replace('\ufeff', '')
+        
+        sp500_data['date'] = pd.to_datetime(sp500_data['date'])
+        sp500_data['Direction'] = np.where(sp500_data['y_pred'] > sp500_data['y_true'].shift(1), 'up', 'down')
+        predictions = sp500_data[['date', 'y_true', 'y_pred', 'Direction']].copy()
+        
+        bond_data['observation_date'] = pd.to_datetime(bond_data['observation_date'])
+        bond_data['Direction'] = np.where(bond_data['DGS10'] > bond_data['DGS10'].shift(1), 'up', 'down')
+        
+        return sp500_data, bond_data, predictions, metrics_data
+    except Exception as e:
+        st.error(f"Error loading data: {str(e)}")
+        return None, None, None, None
 
 def calculate_optimal_weights(expected_returns, cov_matrix, risk_free_rate=0.02):
     n = len(expected_returns)
@@ -81,21 +95,27 @@ def calculate_optimal_weights(expected_returns, cov_matrix, risk_free_rate=0.02)
     
     return weights, portfolio_return, portfolio_risk, sharpe_ratio
 
-def create_line_chart(data, x_col, y_col, title, color='#3b82f6'):
+def create_line_chart(data, x_col, y_col, title, color='#3b82f6', selected_date=None):
     fig = go.Figure()
     fig.add_trace(go.Scatter(
         x=data[x_col],
         y=data[y_col],
         mode='lines',
         name=title,
-        line=dict(color=color, width=2)))
+        line=dict(color=color, width=2)
+    ))
+    
+    if selected_date:
+        fig.add_vline(x=selected_date, line_width=2, line_dash="dash", line_color="green")
     
     fig.update_layout(
         title=title,
         xaxis_title=x_col,
         yaxis_title=y_col,
         hovermode='x unified',
-        showlegend=False  )
+        showlegend=False,
+        title_x=0.5
+    )
     
     return fig
 
@@ -104,15 +124,17 @@ def create_pie_chart(weights, labels):
         labels=labels,
         values=weights,
         hole=0.3,
-        marker_colors=['#3b82f6', '#ef4444'])])
+        marker_colors=['#3b82f6', '#ef4444']
+    )])
     
     fig.update_layout(
         title="Optimal Portfolio Allocation",
-        showlegend=True)
+        showlegend=True
+    )
     return fig
 
 def main():
-    st.markdown('<h1 class="main-header"> SP500 Portfolio Optimizer</h1>', unsafe_allow_html=True)
+    st.markdown('<h1 class="main-header">SP500 Portfolio Optimizer</h1>', unsafe_allow_html=True)
 
     if not st.session_state.data_loaded:
         with st.spinner("Loading data..."):
@@ -200,27 +222,22 @@ def main():
         with the system designed to handle the non-stationary nature of financial markets through robust preprocessing and validation methodologies.
         """)
 
-    if st.button("Show Data Summary"):
-        st.markdown("""
-        </style>
-        div[data-testid="metric-container"] div[data-testid="metric-label"] {
-        font-size: 1.5rem !important;
-        font-weight: 600 !important;
-        color: #34495e; }
-        </style> """, unsafe_allow_html=True) 
-        
-        col1, col2 = st.columns(2) 
-        with col1: 
-            st.subheader(" Dataset Overview") 
-            st.metric("Date Range", f"{min_date} - {max_date}") 
-            st.metric("Total Rows", len(sp500_data))  
-        with col2:
-            st.subheader(" Model Evaluation") 
-            metrics_row = metrics_data.iloc[2]
-            st.metric("Features Used", f"{int(metrics_row['n_feat_used'])}")
-            st.metric("RMSE", f"{metrics_row['rmse']:.4f}") 
-            st.metric("R²", f"{metrics_row['r2'] * 100:.2f}%")
-            st.metric("Hit Rate", f"{metrics_row['hit_rate']:.2%}")
+        if st.button("Show Data Summary"):
+            col1, col2 = st.columns(2)
+            with col1:
+                st.subheader("Dataset Overview")
+                st.metric("Date Range", f"{min_date} - {max_date}")
+                st.metric("Total Rows", len(sp500_data))
+            with col2:
+                st.subheader("Model Evaluation")
+                if len(metrics_data) > 2:
+                    metrics_row = metrics_data.iloc[2]
+                    st.metric("Features Used", f"{int(metrics_row['n_feat_used'])}")
+                    st.metric("RMSE", f"{metrics_row['rmse']:.4f}")
+                    st.metric("R²", f"{metrics_row['r2'] * 100:.2f}%")
+                    st.metric("Hit Rate", f"{metrics_row['hit_rate']:.2%}")
+                else:
+                    st.warning("Insufficient metrics data available")
             
     with tab2:
         st.header("Market Analysis")
@@ -232,7 +249,7 @@ def main():
             
             with col1:
                 st.subheader("SP500 Performance")
-                row = selected_data.iloc[0]
+                row = selected_data.iloc[-1]
                 direction_class = "prediction-up" if row['Direction'] == 'up' else "prediction-down"
     
                 st.markdown(f"""
@@ -260,23 +277,7 @@ def main():
         else:
             st.warning("No data available for the selected date")
         
-        st.subheader("\n Historical Performance")
-
-        import plotly.express as px 
-        import plotly.graph_objects as go 
-        
-        def create_custom_line_chart(df, x_col, y_col, title, line_color='#3b82f6', selected_date=None):   
-            fig = px.line(df, x=x_col, y=y_col, title=title)
-            fig.update_traces(line=dict(color=line_color)) 
-            
-            if selected_date: 
-                if x_col == 'date' or x_col == 'observation_date': 
-                    fig.add_vline(x=selected_date, line_width=2, line_dash="dash", line_color="green")
-                else:
-                    fig.add_hline(y=selected_date, line_width=2, line_dash="dash", line_color="green")
-
-            fig.update_layout(title_x=0.5)
-            return fig
+        st.subheader("Historical Performance")
 
         if len(sp500_data) > 1:
             fig_sp500 = create_line_chart(sp500_data, 'date', 'y_true', 'SP500 Actual Performance', '#3b82f6', selected_date)
@@ -287,7 +288,7 @@ def main():
             st.plotly_chart(fig_bond, use_container_width=True)
     
     with tab3:
-        st.header(" Portfolio Optimization")
+        st.header("Portfolio Optimization")
         
         st.subheader("Asset Allocation Parameters")
         
@@ -303,7 +304,7 @@ def main():
         
         if st.button("Optimize Portfolio"):
             returns = np.array([expected_return_sp500, expected_return_bonds])
-            cov_matrix = np.array([[0.04, 0.01], [0.01, 0.01]]) 
+            cov_matrix = np.array([[0.04, 0.01], [0.01, 0.01]])
             
             weights, portfolio_return, portfolio_risk, sharpe_ratio = calculate_optimal_weights(returns, cov_matrix, risk_free_rate)
             
@@ -325,7 +326,7 @@ def main():
                 st.write(f"Bonds: {weights[1]:.1%}")
     
     with tab4:
-        st.header(" Performance Tracking")
+        st.header("Performance Tracking")
         
         st.subheader("Prediction Accuracy")
         
@@ -347,25 +348,27 @@ def main():
             with col3:
                 st.metric("Accuracy", f"{accuracy:.2%}")
     
-            # Performance comparison chart
             fig_performance = go.Figure()
             fig_performance.add_trace(go.Scatter(
                 x=predictions['date'],
                 y=predictions['y_true'],
                 mode='lines',
                 name='Actual',
-                line=dict(color='blue') ))
+                line=dict(color='blue')
+            ))
             fig_performance.add_trace(go.Scatter(
                 x=predictions['date'],
                 y=predictions['y_pred'],
                 mode='lines',
                 name='Predicted',
-                line=dict(color='red', dash='dash') ))
+                line=dict(color='red', dash='dash')
+            ))
             fig_performance.update_layout(
                 title="Actual vs Predicted Performance",
                 xaxis_title="Date",
                 yaxis_title="Return",
-                hovermode='x unified' )
+                hovermode='x unified'
+            )
             
             st.plotly_chart(fig_performance, use_container_width=True)
         else:
