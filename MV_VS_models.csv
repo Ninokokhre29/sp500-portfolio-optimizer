@@ -1,0 +1,3 @@
+methodology, stocks, portfolio return, Sharpe Ratio
+MV, SP500 and T-Bill,10.82%,0.59
+MV + LightGBM, SP500 and T-Bill,11.72%,0.63
