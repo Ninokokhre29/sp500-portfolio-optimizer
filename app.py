@@ -12,8 +12,7 @@ warnings.filterwarnings('ignore')
 
 st.set_page_config(
     page_title="SP500 Portfolio Optimizer",
-    layout="wide"
-)
+    layout="wide" )
 
 st.markdown("""
 <style>
@@ -102,8 +101,7 @@ def create_line_chart(data, x_col, y_col, title, color='#3b82f6', selected_date=
         y=data[y_col],
         mode='lines',
         name=title,
-        line=dict(color=color, width=2)
-    ))
+        line=dict(color=color, width=2) ))
     
     if selected_date:
         fig.add_vline(x=selected_date, line_width=2, line_dash="dash", line_color="green")
@@ -113,8 +111,7 @@ def create_line_chart(data, x_col, y_col, title, color='#3b82f6', selected_date=
         xaxis_title="Date",
         yaxis_title="S&P 500 Index" if y_col == 'y_true' else y_col,
         hovermode='x unified',
-        title_x=0.5
-    )
+        title_x=0.5)
     
     return fig
 
@@ -123,13 +120,11 @@ def create_pie_chart(weights, labels):
         labels=labels,
         values=weights,
         hole=0.3,
-        marker_colors=['#3b82f6', '#ef4444']
-    )])
+        marker_colors=['#3b82f6', '#ef4444'])])
     
     fig.update_layout(
         title="Optimal Portfolio Allocation",
-        showlegend=True
-    )
+        showlegend=True )
     return fig
 
 def main():
@@ -167,8 +162,7 @@ def main():
         "Choose Date",
         value=min_date,
         min_value=min_date,
-        max_value=max_date
-    )
+        max_value=max_date)
     
     tab1, tab2, tab3, tab4 = st.tabs(["Overview", "Market Analysis", "Optimization", "Performance"])
     
