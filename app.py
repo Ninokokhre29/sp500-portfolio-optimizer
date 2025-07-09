@@ -305,7 +305,7 @@ def main():
         fig.add_trace(go.Bar( x=stacked_df["month_label"], y=stacked_df["Tbill weight_pred"], name="T-Bills (Predicted)", marker_color="#FF9800"))
         fig.add_trace(go.Bar( x=stacked_df["month_label"], y=stacked_df["SP500 weight_hist"], name="SP500 (Historical)", marker_color="#2196F3" ))
         fig.add_trace(go.Bar( x=stacked_df["month_label"], y=stacked_df["Tbill weight_hist"], name="T-Bills (Historical)", marker_color="#FFB300" ))
-        fig.update_layout(mbarmode="group",  xaxis_title="Month", yaxis_title="Weight", title="Portfolio Allocation by Month", height=500)
+        fig.update_layout(barmode="group",  xaxis_title="Month", yaxis_title="Weight", title="Portfolio Allocation by Month", height=500)
         st.plotly_chart(fig, use_container_width=True)
         
         st.subheader("Monthly Return Table")
