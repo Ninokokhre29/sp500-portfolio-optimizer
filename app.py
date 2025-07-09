@@ -10,6 +10,17 @@ from io import BytesIO
 import os
 warnings.filterwarnings('ignore')
 
+st.set_page_config( page_title="SP500 Portfolio Optimizer", layout="wide")
+st.markdown(""" 
+<style> 
+.main-header { font-size: 2.5rem; font-weight: bold; color: #1f2937; text-align: center; margin-bottom: 2rem; }
+.metric-card { background-color: #f8fafc; padding: 1rem; border-radius: 0.5rem; border-left: 4px solid #3b82f6; }
+.prediction-up { color: #10b981; font-weight: bold; }
+.prediction-down { color: #ef4444; font-weight: bold; }
+div[data-testid="metric-container"] div[data-testid="metric-label"] { font-size: 1.5rem !important; font-weight: 600 !important; color: #34495e !important; }
+</style>
+""", unsafe_allow_html=True)
+
 portfolio_df = pd.read_csv("https://raw.githubusercontent.com/Ninokokhre29/sp500-portfolio-optimizer/master/portfolio_returns_cleaned.csv")
 monthly_df = pd.read_csv('https://raw.githubusercontent.com/Ninokokhre29/sp500-portfolio-optimizer/master/monthly_comparison.csv')
 annual_df = pd.read_csv("https://raw.githubusercontent.com/Ninokokhre29/sp500-portfolio-optimizer/master/annual_comparison.csv")
@@ -46,16 +57,6 @@ def create_pie_chart(weights, labels):
     return fig
 
 def main():
-    st.set_page_config( page_title="SP500 Portfolio Optimizer", layout="wide")
-    st.markdown(""" <style> 
-    .main-header { font-size: 2.5rem; font-weight: bold; color: #1f2937; text-align: center; margin-bottom: 2rem; }
-    .metric-card { background-color: #f8fafc; padding: 1rem; border-radius: 0.5rem; border-left: 4px solid #3b82f6; }
-    .prediction-up { color: #10b981; font-weight: bold; }
-    .prediction-down { color: #ef4444; font-weight: bold; }
-    div[data-testid="metric-container"] div[data-testid="metric-label"] { font-size: 1.5rem !important; font-weight: 600 !important; color: #34495e !important; }
-    </style>
-    """, unsafe_allow_html=True)
-
     min_date = sp500_data['date'].min().date() 
     max_date = sp500_data['date'].max().date()
     
