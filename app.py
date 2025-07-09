@@ -68,16 +68,16 @@ def load_static_data():
         monthly_df = pd.read_csv(monthly_url)
         annual_df = pd.read_csv(annual_url)
         hist_df = pd.read_excel(hist_url)
-        
-        # Prepare predicted and historical data for merging
-        predicted_df = portfolio_df.copy()
-        predicted_df["month_name"] = pd.to_datetime("2024-" + predicted_df["month"].astype(str) + "-01") + pd.offsets.MonthEnd(0)
-        hist_df["month_name"] = pd.to_datetime("2024-" + hist_df["month"].astype(str) + "-01") + pd.offsets.MonthEnd(0)
+        predicted_df = portfolio_df.copy() 
 
         merged_df = pd.merge(
             predicted_df[["month", "SP500 weight", "Tbill weight", "portfolio_return", "month_name"]],
-            hist_df[["month", "SP500 weight", "Tbill weight", "portfolio_return", "month_name"]], on="month_name", suffixes=("_pred", "_hist"))
-        merged_df["month_label"] = merged_df["month_name"].dt.strftime("%B %Y")
+            hist_df[["month", "SP500 weight", "Tbill weight", "portfolio_return", "month_name"]], on="month", suffixes=("_pred", "_hist"))
+        if month in (5, 12):
+            year = 2024
+        else:
+            year = 2025
+        merged_df["month_label"] = pd.to_datetime(f"{year}-{month:02d}-01").strftime("%B %Y")
         merged_df = merged_df.sort_values("month_name")
         
         sp500_data = pd.read_csv('https://raw.githubusercontent.com/Ninokokhre29/sp500-portfolio-optimizer/master/top14_results.csv')
