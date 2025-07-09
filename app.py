@@ -278,43 +278,75 @@ def main():
             st.plotly_chart(fig_bond, use_container_width=True)
             
     with tab3:
-        st.header("Investment Optimizer")
-        if 'month_name' in portfolio_df.columns:
-            month_options = portfolio_df["month_name"].unique()
-            selected_month = st.selectbox("Select Month", month_options)
-            
-            row = portfolio_df[portfolio_df["month_name"] == selected_month].iloc[0]
-            sp500_weight = row["SP500 weight"]
-            tbill_weight = row["Tbill weight"]
-            port_return = row["portfolio_return"]
-            
-            st.subheader("Portfolio Allocation")
-            pie_fig = go.Figure(data=[go.Pie(
-                labels=["SP500", "T-Bills"],
-                values=[sp500_weight, tbill_weight],
-                hole=0.4,
-                marker_colors=["#4CAF50", "#FF9800"] )])
-            pie_fig.update_layout(width=500, height=400)
-            st.plotly_chart(pie_fig)
-            
-            st.subheader("Investment Recommendation")
-            amount = st.number_input("Enter investment amount ($)", min_value=1000, value=10000, step=100)
-            sp500_amt = amount * sp500_weight
-            tbill_amt = amount * tbill_weight
-            expected_gain = amount * (port_return / 100)
-            
-            st.success(f"**Recommended Allocation:**\n- SP500: ${sp500_amt:,.0f} ({sp500_weight:.1%})\n- T-Bills: ${tbill_amt:,.0f} ({tbill_weight:.1%})\n\n**Expected Return for the Month:** ${expected_gain:.2f} ({port_return:.2f}%)")
-            st.write("* This return reflects the actual performance of the portfolio if this allocation had been used.")
-            st.subheader("Upcoming Month Allocations")
-            
-            fig_bar = px.bar(
-                portfolio_df,
-                x="month_name",
-                y=["SP500 weight", "Tbill weight"],
-                title="SP500 vs T-Bill Weights Over Time",
-                color_discrete_map={"SP500 weight": "#4CAF50", "Tbill weight": "#FF9800"} )
-            fig_bar.update_layout(barmode='stack', yaxis=dict(tickformat=".0%"))
-            st.plotly_chart(fig_bar, use_container_width=True)
+    st.header("Investment Optimizer")
+    
+    month_options = merged_df["month_label"].tolist()
+    selected_label = st.selectbox("Select Month", month_options)
+    selected_row = merged_df[merged_df["month_label"] == selected_label].iloc[0]
+
+    sp500_weight = selected_row["SP500 weight_pred"]
+    tbill_weight = selected_row["Tbill weight_pred"]
+    port_return = selected_row["portfolio_return_pred"]
+
+    hist_sp500_weight = selected_row["SP500 weight_hist"]
+    hist_tbill_weight = selected_row["Tbill weight_hist"]
+    hist_return = selected_row["portfolio_return_hist"]
+
+    col1, col2 = st.columns(2)
+    with col1:
+        st.subheader("Predicted Allocation")
+        pie1 = go.Figure(data=[go.Pie(
+            labels=["SP500", "T-Bills"],
+            values=[sp500_weight, tbill_weight],
+            hole=0.4,
+            marker_colors=["#4CAF50", "#FF9800"])])
+        pie1.update_layout(width=400, height=350)
+        st.plotly_chart(pie1)
+
+    with col2:
+        st.subheader("Historical Mean Allocation")
+        pie2 = go.Figure(data=[go.Pie(
+            labels=["SP500", "T-Bills"],
+            values=[hist_sp500_weight, hist_tbill_weight],
+            hole=0.4,
+            marker_colors=["#2196F3", "#FFB300"])])
+        pie2.update_layout(width=400, height=350)
+        st.plotly_chart(pie2)
+
+    st.subheader("Investment Recommendations")
+    amount = st.number_input("Enter investment amount ($)", min_value=1000, value=10000, step=100)
+    
+    sp500_amt = amount * sp500_weight
+    tbill_amt = amount * tbill_weight
+    expected_gain_pred = amount * (port_return / 100)
+
+    hist_sp500_amt = amount * hist_sp500_weight
+    hist_tbill_amt = amount * hist_tbill_weight
+    expected_gain_hist = amount * (hist_return / 100)
+
+    col1, col2 = st.columns(2)
+    with col1:
+        st.success(f"**Predicted Allocation:**\n"
+                   f"- SP500: ${sp500_amt:,.0f} ({sp500_weight:.1%})\n"
+                   f"- T-Bills: ${tbill_amt:,.0f} ({tbill_weight:.1%})\n\n"
+                   f"**Expected Return:** ${expected_gain_pred:.2f} ({port_return:.2f}%)")
+        st.write("*This return reflects the predicted performance of the model-based allocation.*")
+
+    with col2:
+        st.info(f"**Historical Mean Allocation:**\n"
+                f"- SP500: ${hist_sp500_amt:,.0f} ({hist_sp500_weight:.1%})\n"
+                f"- T-Bills: ${hist_tbill_amt:,.0f} ({hist_tbill_weight:.1%})\n\n"
+                f"**Expected Return:** ${expected_gain_hist:.2f} ({hist_return:.2f}%)")
+        st.write("*This return reflects the actual performance using historical mean allocation.*")
+
+    st.subheader("Monthly Return Table")
+    table_df = merged_df[["month_label", "portfolio_return_pred", "portfolio_return_hist"]].copy()
+    table_df["Difference"] = table_df["portfolio_return_pred"] - table_df["portfolio_return_hist"]
+    table_df.columns = ["Month", "Predicted Return", "Historical Return", "Difference"]
+    st.dataframe(table_df.style.format({
+        "Predicted Return": "{:.2%}",
+        "Historical Return": "{:.2%}",
+        "Difference": "{:+.2%}"}))
 
     with tab4:
         st.header("Performance Comparison")
@@ -363,14 +395,6 @@ def main():
                 yaxis_title="Monthly Return", 
                 xaxis_title="Date" )
             st.plotly_chart(fig, use_container_width=True)
-
-            st.subheader("Monthly Return Table")
-            comparison_table = monthly_df.copy()
-            comparison_table["Difference"] = comparison_table["Predicted"] - comparison_table["Historical Mean"]
-            st.dataframe(comparison_table.style.format({
-                "Historical Mean": "{:.2%}",
-                "Predicted": "{:.2%}",
-                "Difference": "{:+.2%}" }))
 
 if __name__ == "__main__":
     main()
