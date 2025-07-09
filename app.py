@@ -21,23 +21,6 @@ st.markdown("""
 </style>
 """, unsafe_allow_html=True)
 
-if 'sp500_data' not in st.session_state:
-    st.session_state.sp500_data = None
-if 'bond_data' not in st.session_state:
-    st.session_state.bond_data = None
-if 'predictions' not in st.session_state:
-    st.session_state.predictions = None
-if 'metrics_data' not in st.session_state:
-    st.session_state.metrics_data = None
-if 'portfolio_df' not in st.session_state:
-    st.session_state.portfolio_df = None
-if 'monthly_df' not in st.session_state:
-    st.session_state.monthly_df = None
-if 'annual_df' not in st.session_state:
-    st.session_state.annual_df = None
-if 'data_loaded' not in st.session_state:
-    st.session_state.data_loaded = False
-
 portfolio_df = pd.read_csv("https://raw.githubusercontent.com/Ninokokhre29/sp500-portfolio-optimizer/master/portfolio_returns_cleaned.csv")
 monthly_df = pd.read_csv('https://raw.githubusercontent.com/Ninokokhre29/sp500-portfolio-optimizer/master/monthly_comparison.csv')
 annual_df = pd.read_csv("https://raw.githubusercontent.com/Ninokokhre29/sp500-portfolio-optimizer/master/annual_comparison.csv")
