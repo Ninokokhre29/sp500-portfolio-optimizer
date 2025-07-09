@@ -74,7 +74,7 @@ def load_static_data():
             predicted_df[["month", "SP500 weight", "Tbill weight", "portfolio_return"]],
             hist_df[["month", "SP500 weight", "Tbill weight", "portfolio_return"]], on="month", suffixes=("_pred", "_hist"))
         
-        merged_df["year"] = np.where(merged_df["month"].isin([5, 12]), 2024, 2025)
+        merged_df["year"] = np.where(merged_df["month"].between(5, 12), 2024, 2025)
         merged_df["month_label"] = pd.to_datetime(merged_df["year"].astype(str) + "-" + merged_df["month"].astype(str).str.zfill(2) + "-01").dt.strftime("%B %Y")
         merged_df = merged_df.sort_values("month_label")
         
