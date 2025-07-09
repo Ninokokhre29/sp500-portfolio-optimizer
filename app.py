@@ -290,7 +290,7 @@ def main():
             row = portfolio_df[portfolio_df["month_name"] == selected_month].iloc[0]
             sp500_weight = row["SP500 weight"]
             tbill_weight = row["Tbill weight"]
-            pred_return = row["portfolio_return"]
+            port_return = row["portfolio_return"]
             
             st.subheader("Portfolio Allocation")
             pie_fig = go.Figure(data=[go.Pie(
@@ -305,10 +305,10 @@ def main():
             amount = st.number_input("Enter investment amount ($)", min_value=1000, value=10000, step=100)
             sp500_amt = amount * sp500_weight
             tbill_amt = amount * tbill_weight
-            expected_gain = amount * (pred_return / 100)
+            expected_gain = amount * (port_return / 100)
             
-            st.success(f"**Recommended Allocation:**\n- SP500: ${sp500_amt:,.0f} ({sp500_weight:.1%})\n- T-Bills: ${tbill_amt:,.0f} ({tbill_weight:.1%})\n\n**Expected Return for the Month:** ${expected_gain:.2f} ({pred_return:.2f}%)")
-            
+            st.success(f"**Recommended Allocation:**\n- SP500: ${sp500_amt:,.0f} ({sp500_weight:.1%})\n- T-Bills: ${tbill_amt:,.0f} ({tbill_weight:.1%})\n\n**Expected Return for the Month:** ${expected_gain:.2f} ({port_return:.2f}%)")
+            st.write("* This return reflects the actual performance of the portfolio if this allocation had been used.")
             st.subheader("Upcoming Month Allocations")
             
             fig_bar = px.bar(
