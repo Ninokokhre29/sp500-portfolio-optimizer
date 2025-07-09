@@ -41,39 +41,26 @@ if 'data_loaded' not in st.session_state:
 
 def load_static_data():
     try:
-        portfolio_url = "https://raw.githubusercontent.com/Ninokokhre29/sp500-portfolio-optimizer/master/portfolio_returns_cleaned.csv"
-        monthly_url = 'https://raw.githubusercontent.com/Ninokokhre29/sp500-portfolio-optimizer/master/monthly_comparison.csv'
-        annual_url = "https://raw.githubusercontent.com/Ninokokhre29/sp500-portfolio-optimizer/master/annual_comparison.csv"
-        hist_url = "https://raw.githubusercontent.com/Ninokokhre29/sp500-portfolio-optimizer/master/portfolio_returns%20top14%20(regular).xlsx"
-        
-        portfolio_df = pd.read_csv(portfolio_url)
-        monthly_df = pd.read_csv(monthly_url)
-        annual_df = pd.read_csv(annual_url)
-        hist_df = pd.read_excel(hist_url)
+        portfolio_df = pd.read_csv("https://raw.githubusercontent.com/Ninokokhre29/sp500-portfolio-optimizer/master/portfolio_returns_cleaned.csv")
+        monthly_df = pd.read_csv('https://raw.githubusercontent.com/Ninokokhre29/sp500-portfolio-optimizer/master/monthly_comparison.csv')
+        annual_df = pd.read_csv("https://raw.githubusercontent.com/Ninokokhre29/sp500-portfolio-optimizer/master/annual_comparison.csv")
+        hist_df = pd.read_excel("https://raw.githubusercontent.com/Ninokokhre29/sp500-portfolio-optimizer/master/portfolio_returns%20top14%20(regular).xlsx")
         predicted_df = portfolio_df.copy() 
-
-        merged_df = pd.merge(
-            predicted_df[["month", "SP500 weight", "Tbill weight", "portfolio_return"]],
-            hist_df[["month", "SP500 weight", "Tbill weight", "portfolio_return"]], on="month", suffixes=("_pred", "_hist"))
-        
+        merged_df = pd.merge( predicted_df[["month", "SP500 weight", "Tbill weight", "portfolio_return"]], 
+                            hist_df[["month", "SP500 weight", "Tbill weight", "portfolio_return"]], on="month", suffixes=("_pred", "_hist"))
         merged_df["year"] = np.where(merged_df["month"].between(5, 12), 2024, 2025)
         merged_df["month_label"] = pd.to_datetime(merged_df["year"].astype(str) + "-" + merged_df["month"].astype(str).str.zfill(2) + "-01").dt.strftime("%B %Y")
         merged_df = merged_df.sort_values(["year", "month"]) 
-        
         sp500_data = pd.read_csv('https://raw.githubusercontent.com/Ninokokhre29/sp500-portfolio-optimizer/master/top14_results.csv')
         bond_data = pd.read_csv('https://raw.githubusercontent.com/Ninokokhre29/sp500-portfolio-optimizer/master/DGS10.csv')
-        
         response = requests.get('https://raw.githubusercontent.com/Ninokokhre29/sp500-portfolio-optimizer/master/metrics.xlsx')
         response.raise_for_status()
         metrics_data = pd.read_excel(BytesIO(response.content))
-        
         for df in [sp500_data, bond_data, metrics_data, portfolio_df, monthly_df, annual_df]:
             df.columns = df.columns.str.strip().str.replace('\ufeff', '')
-        
         sp500_data['date'] = pd.to_datetime(sp500_data['date'])
         sp500_data['Direction'] = np.where(sp500_data['y_pred'] > sp500_data['y_true'].shift(1), 'up', 'down')
         predictions = sp500_data[['date', 'y_true', 'y_pred', 'Direction']].copy()
-    
         bond_data['observation_date'] = pd.to_datetime(bond_data['observation_date'])
         bond_data['Direction'] = np.where(bond_data['DGS10'] > bond_data['DGS10'].shift(1), 'up', 'down')
         
@@ -99,8 +86,7 @@ def create_pie_chart(weights, labels):
 def main():
     st.markdown('<h1 class="main-header">SP500 Portfolio Optimizer</h1>', unsafe_allow_html=True)
     if not st.session_state.data_loaded:
-        results = load_static_data()
-            
+        results = load_static_data()     
         if all(data is not None for data in results):
             (st.session_state.sp500_data, st.session_state.bond_data, 
             st.session_state.predictions, st.session_state.metrics_data,
@@ -116,7 +102,6 @@ def main():
     monthly_df = st.session_state.monthly_df
     annual_df = st.session_state.annual_df
     merged_df = st.session_state.merged_df
-
     min_date = sp500_data['date'].min().date() 
     max_date = sp500_data['date'].max().date()
     
@@ -125,7 +110,6 @@ def main():
     with tab1:
         st.header("Financial Overview")
         col1, col2 = st.columns(2)
-        
         with col1:
             st.subheader("S&P 500 Index")
             st.markdown("""
@@ -203,9 +187,7 @@ def main():
             
     with tab2:
         st.header("Market Analysis") 
-        
         selected_date = st.date_input( "Select Date", value=min_date, min_value=min_date, max_value=max_date)
-        
         selected_data = sp500_data[sp500_data['date'].dt.date <= selected_date]
         bond_data_filtered = bond_data[bond_data['observation_date'].dt.date <= selected_date]
         
@@ -230,7 +212,6 @@ def main():
                     latest_bond = bond_data_filtered.iloc[-1]
                     bond_direction = latest_bond['Direction'].upper()
                     bond_color_class = "prediction-up" if bond_direction == "UP" else "prediction-down"
-                    
                     st.markdown(f"""
                     <div class="metric-card">
                         <p style="font-size: 1.5rem; font-weight: bold;">{latest_bond['DGS10']:.2f}%</p>
@@ -243,7 +224,6 @@ def main():
         if len(selected_data) > 1:
             fig_sp500 = create_line_chart(selected_data, 'date', 'y_true', 'SP500 Actual Performance', '#3b82f6')
             st.plotly_chart(fig_sp500, use_container_width=True)
-        
         if len(bond_data_filtered) > 1:
             fig_bond = create_line_chart(bond_data_filtered, 'observation_date', 'DGS10', '10-Year Treasury Rate', '#ef4444')
             st.plotly_chart(fig_bond, use_container_width=True)
@@ -297,20 +277,19 @@ def main():
             st.write("*This return reflects the actual performance using historical mean allocation.*")
         
         st.subheader("Portfolio Allocation Over Time")
-        col1, col2 = st.columns(2)
-        with col1:
-            st.markdown("Model-Based Allocation")
-            fig_pred = go.Figure()
-            fig_pred.add_trace(go.Bar( x=merged_df["month_label"], y=merged_df["SP500 weight_pred"], name="SP500 (Predicted)", marker_color="#4CAF50"))
-            fig_pred.add_trace(go.Bar( x=merged_df["month_label"], y=merged_df["Tbill weight_pred"], name="T-Bills (Predicted)", marker_color="#FF9800"))
-            fig_pred.update_layout(barmode="group",  xaxis_title="Month", yaxis_title="Weight", title="Portfolio Allocation by Month", height=500)
-            st.plotly_chart(fig_pred, use_container_width=True)
-        with col2:
-            st.markdown("Historical Mean Allocation")
-            fig_hist.add_trace(go.Bar( x=merged_df["month_label"], y=merged_df["SP500 weight_hist"], name="SP500 (Historical)", marker_color="#2196F3" ))
-            fig_hist.add_trace(go.Bar( x=merged_df["month_label"], y=merged_df["Tbill weight_hist"], name="T-Bills (Historical)", marker_color="#FFB300" ))
-            fig_hist.update_layout(barmode="group",  xaxis_title="Month", yaxis_title="Weight", title="Portfolio Allocation by Month", height=500)
-            st.plotly_chart(fig_hist, use_container_width=True)
+        st.markdown("Model-Based Allocation")
+        fig_pred = go.Figure()
+        fig_pred.add_trace(go.Bar( x=merged_df["month_label"], y=merged_df["SP500 weight_pred"], name="SP500 (Predicted)", marker_color="#4CAF50"))
+        fig_pred.add_trace(go.Bar( x=merged_df["month_label"], y=merged_df["Tbill weight_pred"], name="T-Bills (Predicted)", marker_color="#FF9800"))
+        fig_pred.update_layout(barmode="group",  xaxis_title="Month", yaxis_title="Weight", title="Portfolio Allocation by Month", height=500)
+        st.plotly_chart(fig_pred, use_container_width=True)
+        
+        st.markdown("Historical Mean Allocation")
+        fig_hist = go.Figure()
+        fig_hist.add_trace(go.Bar( x=merged_df["month_label"], y=merged_df["SP500 weight_hist"], name="SP500 (Historical)", marker_color="#2196F3" ))
+        fig_hist.add_trace(go.Bar( x=merged_df["month_label"], y=merged_df["Tbill weight_hist"], name="T-Bills (Historical)", marker_color="#FFB300" ))
+        fig_hist.update_layout(barmode="group",  xaxis_title="Month", yaxis_title="Weight", title="Portfolio Allocation by Month", height=500)
+        st.plotly_chart(fig_hist, use_container_width=True)
         
         st.subheader("Monthly Return Table")
         table_df = merged_df[["month_label", "portfolio_return_pred", "portfolio_return_hist"]].copy()
@@ -320,15 +299,12 @@ def main():
         
     with tab4:
         st.header("Performance Comparison")
-        
         if 'methodology' in annual_df.columns and 'portfolio return' in annual_df.columns:
             col1, col2 = st.columns(2)
-            
             with col1:
                 st.subheader("Annual Return Comparison")
                 if annual_df["portfolio return"].dtype == 'object':
                     annual_df["portfolio return"] = annual_df["portfolio return"].str.rstrip('%').astype(float)
-                
                 bar_fig = px.bar( annual_df, x="methodology", y="portfolio return", color="methodology", color_discrete_sequence=["#4CAF50", "#FF9800"], labels={"portfolio return": "Return (%)"},
                     title="Annual Return: MV vs MV + LightGBM" )
                 st.plotly_chart(bar_fig, use_container_width=True)
@@ -342,7 +318,6 @@ def main():
         if 'Date' in monthly_df.columns and 'Historical Mean' in monthly_df.columns and 'Predicted' in monthly_df.columns:
             st.subheader("Monthly Return Comparison")
             monthly_df["Date"] = pd.to_datetime(monthly_df["Date"])
-            
             fig = go.Figure()
             fig.add_trace(go.Scatter( x=monthly_df["Date"],  y=monthly_df["Historical Mean"], name="Historical Mean",  line=dict(color='blue')))
             fig.add_trace(go.Scatter( x=monthly_df["Date"],  y=monthly_df["Predicted"], name="Predicted", line=dict(color='orange') ))
