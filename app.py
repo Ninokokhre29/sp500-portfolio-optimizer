@@ -334,6 +334,7 @@ def main():
         expected_gain_hist = amount * (hist_return / 100)
         
         col1, col2 = st.columns(2)
+        
         with col1:
             st.success(f"**Predicted Allocation:**\n"
                    f"- SP500: ${sp500_amt:,.2f} ({sp500_weight:.3%})\n"
@@ -346,7 +347,41 @@ def main():
                 f"- T-Bills: ${hist_tbill_amt:,.0f} ({hist_tbill_weight:.1%})\n\n"
                 f"**Expected Return:** ${expected_gain_hist:.2f} ({hist_return:.2f}%)")
             st.write("*This return reflects the actual performance using historical mean allocation.*")
-            
+                st.subheader("Portfolio Allocation Over Time (Stacked Bar Chart)")
+        stacked_df = merged_df.copy()
+        stacked_df = stacked_df[["month_label", 
+                                 "SP500 weight_pred", "Tbill weight_pred", 
+                                 "SP500 weight_hist", "Tbill weight_hist"]]
+
+        fig = go.Figure()
+        fig.add_trace(go.Bar(
+            x=stacked_df["month_label"],
+            y=stacked_df["SP500 weight_pred"],
+            name="SP500 (Predicted)",
+            marker_color="#4CAF50"))
+        fig.add_trace(go.Bar(
+            x=stacked_df["month_label"],
+            y=stacked_df["Tbill weight_pred"],
+            name="T-Bills (Predicted)",
+            marker_color="#FF9800"))
+        fig.add_trace(go.Bar(
+            x=stacked_df["month_label"],
+            y=stacked_df["SP500 weight_hist"],
+            name="SP500 (Historical)",
+            marker_color="#2196F3" ))
+        fig.add_trace(go.Bar(
+            x=stacked_df["month_label"],
+            y=stacked_df["Tbill weight_hist"],
+            name="T-Bills (Historical)",
+            marker_color="#FFB300" ))
+        fig.update_layout(
+            barmode="group",  # use "stack" if you want stacked bars
+            xaxis_title="Month",
+            yaxis_title="Weight",
+            title="Portfolio Allocation by Month",
+            height=500)
+        st.plotly_chart(fig, use_container_width=True)
+
         st.subheader("Monthly Return Table")
         table_df = merged_df[["month_label", "portfolio_return_pred", "portfolio_return_hist"]].copy()
         table_df["Difference"] = table_df["portfolio_return_pred"] - table_df["portfolio_return_hist"]
