@@ -228,15 +228,8 @@ def main():
             
     with tab2:
         st.header("Market Analysis")
-        st.subheader("Select Analysis Date") 
-        min_date = sp500_data['date'].min().date() 
-        max_date = sp500_data['date'].max().date() 
-        selected_date = st.date_input(
-            label="", 
-            value=min_date, 
-            min_value=min_date, 
-            max_value=max_date )
-        
+        st.markdown("**Select Analysis Date**", unsafe_allow_html=True)
+        selected_date = st.date_input(label="", value=min_date, min_value=min_date, max_value=max_date)
         selected_data = sp500_data[sp500_data['date'].dt.date <= selected_date]
         bond_data_filtered = bond_data[bond_data['observation_date'].dt.date <= selected_date]
         
@@ -321,7 +314,6 @@ def main():
     with tab4:
         st.header("Performance Comparison")
         
-        # Check if annual_df has the expected columns
         if 'methodology' in annual_df.columns and 'portfolio return' in annual_df.columns:
             col1, col2 = st.columns(2)
             
@@ -343,8 +335,8 @@ def main():
             with col2:
                 st.subheader("Sharpe Ratio")
                 if len(annual_df) >= 2:
-                    st.metric("MV", f"{annual_df.iloc[0]['Sharpe Ratio']:.3f}")
-                    st.metric("MV + LightGBM", f"{annual_df.iloc[1]['Sharpe Ratio']:.3f}")
+                    st.metric("MV", f"{annual_df.iloc[0]['Sharpe Ratio']:.2f}")
+                    st.metric("MV + LightGBM", f"{annual_df.iloc[1]['Sharpe Ratio']:.2f}")
 
         if 'date' in monthly_df.columns and 'regular' in monthly_df.columns and 'tree' in monthly_df.columns:
             st.subheader("Monthly Return Comparison")
