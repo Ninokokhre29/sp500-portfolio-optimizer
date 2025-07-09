@@ -78,6 +78,8 @@ def load_static_data():
             df.columns = df.columns.str.strip().str.replace('\ufeff', '')
         
         sp500_data['date'] = pd.to_datetime(sp500_data['date'])
+        min_date = sp500_data['date'].min().date()
+        max_date = sp500_data['date'].max().date()
         sp500_data['Direction'] = np.where(sp500_data['y_pred'] > sp500_data['y_true'].shift(1), 'up', 'down')
         predictions = sp500_data[['date', 'y_true', 'y_pred', 'Direction']].copy()
     
