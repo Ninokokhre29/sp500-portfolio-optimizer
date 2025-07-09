@@ -343,20 +343,20 @@ def main():
                     st.metric("MV", f"{annual_df.iloc[0]['Sharpe Ratio']:.2f}")
                     st.metric("MV + LightGBM", f"{annual_df.iloc[1]['Sharpe Ratio']:.2f}")
 
-        if 'date' in monthly_df.columns and 'regular' in monthly_df.columns and 'tree' in monthly_df.columns:
+        if 'Date' in monthly_df.columns and 'Historical Mean' in monthly_df.columns and 'Predicted' in monthly_df.columns:
             st.subheader("Monthly Return Comparison")
-            monthly_df["date"] = pd.to_datetime(monthly_df["date"])
+            monthly_df["Date"] = pd.to_datetime(monthly_df["Date"])
             
             fig = go.Figure()
             fig.add_trace(go.Scatter(
-                x=monthly_df["date"], 
-                y=monthly_df["regular"], 
-                name="Regular", 
-                line=dict(color='blue')  ))
+                x=monthly_df["Date"], 
+                y=monthly_df["Historical Mean"], 
+                name="Historical Mean", 
+                line=dict(color='blue')))
             fig.add_trace(go.Scatter(
-                x=monthly_df["date"], 
-                y=monthly_df["tree"], 
-                name="Predicted (Tree)", 
+                x=monthly_df["Date"], 
+                y=monthly_df["Predicted"], 
+                name="Predicted", 
                 line=dict(color='orange') ))
             fig.update_layout(
                 title="Monthly Returns: Actual vs Predicted", 
@@ -366,10 +366,10 @@ def main():
 
             st.subheader("Monthly Return Table")
             comparison_table = monthly_df.copy()
-            comparison_table["Difference"] = comparison_table["tree"] - comparison_table["regular"]
+            comparison_table["Difference"] = comparison_table["Predicted"] - comparison_table["Historical Mean"]
             st.dataframe(comparison_table.style.format({
-                "regular": "{:.2%}",
-                "tree": "{:.2%}",
+                "Historical Mean": "{:.2%}",
+                "Predicted": "{:.2%}",
                 "Difference": "{:+.2%}" }))
 
 if __name__ == "__main__":
