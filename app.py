@@ -74,24 +74,6 @@ def create_pie_chart(weights, labels):
     return fig
 
 def main():
-    st.markdown('<h1 class="main-header">SP500 Portfolio Optimizer</h1>', unsafe_allow_html=True)
-    st.session_state.sp500_data = sp500_data
-    st.session_state.bond_data = bond_data
-    st.session_state.predictions = predictions
-    st.session_state.metrics_data = metrics_data
-    st.session_state.portfolio_df = portfolio_df
-    st.session_state.monthly_df = monthly_df
-    st.session_state.annual_df = annual_df
-    st.session_state.merged_df = merged_df
-    
-    sp500_data = st.session_state.sp500_data
-    bond_data = st.session_state.bond_data
-    predictions = st.session_state.predictions
-    metrics_data = st.session_state.metrics_data
-    portfolio_df = st.session_state.portfolio_df
-    monthly_df = st.session_state.monthly_df
-    annual_df = st.session_state.annual_df
-    merged_df = st.session_state.merged_df
     min_date = sp500_data['date'].min().date() 
     max_date = sp500_data['date'].max().date()
     
