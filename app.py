@@ -21,31 +21,25 @@ st.markdown("""
         font-weight: bold;
         color: #1f2937;
         text-align: center;
-        margin-bottom: 2rem;
-    }
+        margin-bottom: 2rem; }
     .metric-card {
         background-color: #f8fafc;
         padding: 1rem;
         border-radius: 0.5rem;
-        border-left: 4px solid #3b82f6;
-    }
+        border-left: 4px solid #3b82f6; }
     .prediction-up {
         color: #10b981;
-        font-weight: bold;
-    }
+        font-weight: bold; }
     .prediction-down {
         color: #ef4444;
-        font-weight: bold;
-    }
+        font-weight: bold; }
     div[data-testid="metric-container"] div[data-testid="metric-label"] {
         font-size: 1.5rem !important;
         font-weight: 600 !important;
-        color: #34495e !important;
-    }
+        color: #34495e !important; }
 </style>
 """, unsafe_allow_html=True)
 
-# Initialize session state
 if 'sp500_data' not in st.session_state:
     st.session_state.sp500_data = None
 if 'bond_data' not in st.session_state:
@@ -64,9 +58,7 @@ if 'data_loaded' not in st.session_state:
     st.session_state.data_loaded = False
 
 def load_static_data():
-    """Load all required data from GitHub repository"""
     try:
-        # Load portfolio data - Fixed URL to raw content
         portfolio_url = "https://raw.githubusercontent.com/Ninokokhre29/sp500-portfolio-optimizer/master/portfolio_returns_cleaned.csv"
         monthly_url = 'https://raw.githubusercontent.com/Ninokokhre29/sp500-portfolio-optimizer/master/monthly_comparison.csv'
         annual_url = "https://raw.githubusercontent.com/Ninokokhre29/sp500-portfolio-optimizer/master/annual_comparison.csv"
@@ -75,25 +67,20 @@ def load_static_data():
         monthly_df = pd.read_csv(monthly_url)
         annual_df = pd.read_csv(annual_url)
         
-        # Load main data
         sp500_data = pd.read_csv('https://raw.githubusercontent.com/Ninokokhre29/sp500-portfolio-optimizer/master/top14_results.csv')
         bond_data = pd.read_csv('https://raw.githubusercontent.com/Ninokokhre29/sp500-portfolio-optimizer/master/DGS10.csv')
         
-        # Load metrics data
         response = requests.get('https://raw.githubusercontent.com/Ninokokhre29/sp500-portfolio-optimizer/master/metrics.xlsx')
         response.raise_for_status()
         metrics_data = pd.read_excel(BytesIO(response.content))
         
-        # Clean column names
         for df in [sp500_data, bond_data, metrics_data, portfolio_df, monthly_df, annual_df]:
             df.columns = df.columns.str.strip().str.replace('\ufeff', '')
         
-        # Process SP500 data
         sp500_data['date'] = pd.to_datetime(sp500_data['date'])
         sp500_data['Direction'] = np.where(sp500_data['y_pred'] > sp500_data['y_true'].shift(1), 'up', 'down')
         predictions = sp500_data[['date', 'y_true', 'y_pred', 'Direction']].copy()
-        
-        # Process bond data
+    
         bond_data['observation_date'] = pd.to_datetime(bond_data['observation_date'])
         bond_data['Direction'] = np.where(bond_data['DGS10'] > bond_data['DGS10'].shift(1), 'up', 'down')
         
@@ -103,27 +90,14 @@ def load_static_data():
         st.error(f"Error loading data: {str(e)}")
         return None, None, None, None, None, None, None
 
-def calculate_optimal_weights(expected_returns, cov_matrix, risk_free_rate=0.02):
-    """Calculate optimal portfolio weights using Markowitz optimization"""
-    n = len(expected_returns)
-    weights = np.random.dirichlet(np.ones(n), size=1)[0]
-    
-    portfolio_return = np.dot(weights, expected_returns)
-    portfolio_risk = np.sqrt(np.dot(weights.T, np.dot(cov_matrix, weights)))
-    sharpe_ratio = (portfolio_return - risk_free_rate) / portfolio_risk
-    
-    return weights, portfolio_return, portfolio_risk, sharpe_ratio
-
 def create_line_chart(data, x_col, y_col, title, color='#3b82f6', selected_date=None):
-    """Create a line chart with optional date marker"""
     fig = go.Figure()
     fig.add_trace(go.Scatter(
         x=data[x_col],
         y=data[y_col],
         mode='lines',
         name=title,
-        line=dict(color=color, width=2)
-    ))
+        line=dict(color=color, width=2)  ))
     
     if selected_date:
         fig.add_vline(x=selected_date, line_width=2, line_dash="dash", line_color="green")
@@ -133,30 +107,24 @@ def create_line_chart(data, x_col, y_col, title, color='#3b82f6', selected_date=
         xaxis_title="Date",
         yaxis_title="S&P 500 Index" if y_col == 'y_true' else y_col,
         hovermode='x unified',
-        title_x=0.5
-    )
+        title_x=0.5 )
     
     return fig
 
 def create_pie_chart(weights, labels):
-    """Create a pie chart for portfolio allocation"""
     fig = go.Figure(data=[go.Pie(
         labels=labels,
         values=weights,
         hole=0.3,
-        marker_colors=['#3b82f6', '#ef4444']
-    )])
+        marker_colors=['#3b82f6', '#ef4444']  )])
     
     fig.update_layout(
         title="Optimal Portfolio Allocation",
-        showlegend=True
-    )
+        showlegend=True )
     return fig
 
 def main():
     st.markdown('<h1 class="main-header">SP500 Portfolio Optimizer</h1>', unsafe_allow_html=True)
-
-    # Load data if not already loaded
     if not st.session_state.data_loaded:
         with st.spinner("Loading data..."):
             results = load_static_data()
@@ -167,16 +135,9 @@ def main():
                  st.session_state.portfolio_df, st.session_state.monthly_df,
                  st.session_state.annual_df) = results
                 st.session_state.data_loaded = True
-                st.success("Data loaded successfully!")
-            else:
-                st.error("Failed to load data. Please check your file paths and data format.")
                 return
-
-    if not st.session_state.data_loaded:
-        st.error("Data not loaded. Please check your file paths.")
         return
         
-    # Get data from session state
     sp500_data = st.session_state.sp500_data
     bond_data = st.session_state.bond_data
     predictions = st.session_state.predictions
@@ -185,7 +146,6 @@ def main():
     monthly_df = st.session_state.monthly_df
     annual_df = st.session_state.annual_df
     
-    # Date selection
     st.subheader("Select Analysis Date")
     min_date = sp500_data['date'].min().date()
     max_date = sp500_data['date'].max().date()
@@ -194,10 +154,8 @@ def main():
         "Choose Date",
         value=min_date,
         min_value=min_date,
-        max_value=max_date
-    )
+        max_value=max_date )
     
-    # Create tabs
     tab1, tab2, tab3, tab4 = st.tabs(["Overview", "Market Analysis", "Optimization", "Performance"])
     
     with tab1:
@@ -214,8 +172,7 @@ def main():
             - Market-cap weighted index
             - Covers approximately 80% of U.S. equity market capitalization
             - Rebalanced quarterly
-            - Widely used for benchmarking and passive investing
-            """)
+            - Widely used for benchmarking and passive investing   """)
         
         with col2:
             st.subheader("10-Year Treasury Bond")
@@ -227,8 +184,7 @@ def main():
             - Backed by the full faith and credit of the U.S. government
             - Fixed interest payments every six months
             - Inverse relationship with interest rates
-            - Used as a risk-free rate in financial models
-            """)
+            - Used as a risk-free rate in financial models  """)
         
         st.divider()
         
@@ -263,8 +219,7 @@ def main():
         predicts future 20-day returns while avoiding look-ahead bias through proper temporal splitting. The pipeline incorporates SHAP (SHapley Additive exPlanations) 
         values to identify stable, high-importance features across multiple time periods, systematically testing different feature set sizes to optimize the balance 
         between model complexity and predictive performance. Results are evaluated using multiple metrics including RMSE, R-squared, and directional accuracy (hit rate), 
-        with the system designed to handle the non-stationary nature of financial markets through robust preprocessing and validation methodologies.
-        """)
+        with the system designed to handle the non-stationary nature of financial markets through robust preprocessing and validation methodologies. """)
 
         if st.button("Show Data Summary"):
             col1, col2 = st.columns(2)
@@ -281,8 +236,6 @@ def main():
                     st.metric("RMSE", f"{metrics_row['rmse']:.4f}")
                     st.metric("R²", f"{metrics_row['r2'] * 100:.2f}%")
                     st.metric("Hit Rate", f"{metrics_row['hit_rate']:.2%}")
-                else:
-                    st.warning("Insufficient metrics data available")
             
     with tab2:
         st.header("Market Analysis")
@@ -317,10 +270,6 @@ def main():
                         <p class="{bond_color_class}">Direction: {bond_direction}</p>
                     </div>
                     """, unsafe_allow_html=True)
-                else:
-                    st.warning("No bond data available for the selected date")
-        else:
-            st.warning("No data available for the selected date")
         
         st.subheader("Historical Performance")
 
@@ -334,8 +283,6 @@ def main():
             
     with tab3:
         st.header("Investment Optimizer")
-        
-        # Check if portfolio_df has the expected columns
         if 'month_name' in portfolio_df.columns:
             month_options = portfolio_df["month_name"].unique()
             selected_month = st.selectbox("Select Month", month_options)
@@ -350,8 +297,7 @@ def main():
                 labels=["SP500", "T-Bills"],
                 values=[sp500_weight, tbill_weight],
                 hole=0.4,
-                marker_colors=["#4CAF50", "#FF9800"]
-            )])
+                marker_colors=["#4CAF50", "#FF9800"] )])
             pie_fig.update_layout(width=500, height=400)
             st.plotly_chart(pie_fig)
             
@@ -370,20 +316,9 @@ def main():
                 x="month_name",
                 y=["SP500 weight", "Tbill weight"],
                 title="SP500 vs T-Bill Weights Over Time",
-                color_discrete_map={"SP500 weight": "#4CAF50", "Tbill weight": "#FF9800"}
-            )
+                color_discrete_map={"SP500 weight": "#4CAF50", "Tbill weight": "#FF9800"} )
             fig_bar.update_layout(barmode='stack', yaxis=dict(tickformat=".0%"))
             st.plotly_chart(fig_bar, use_container_width=True)
-            
-            st.subheader("Investment Summary")
-            st.markdown(f"""
-            - **SP500 Investment**: ${sp500_amt:,.0f}  
-            - **T-Bills Investment**: ${tbill_amt:,.0f}  
-            - **Expected Return (Monthly)**: **${expected_gain:.2f}**
-            - **Total Investment**: **${amount:,.0f}**
-            """)
-        else:
-            st.error("Portfolio data not available or incorrectly formatted")
 
     with tab4:
         st.header("Performance Comparison")
@@ -394,7 +329,6 @@ def main():
             
             with col1:
                 st.subheader("Annual Return Comparison")
-                # Handle percentage conversion more safely
                 if annual_df["portfolio return"].dtype == 'object':
                     annual_df["portfolio return"] = annual_df["portfolio return"].str.rstrip('%').astype(float)
                 
@@ -405,8 +339,7 @@ def main():
                     color="methodology",
                     color_discrete_sequence=["#4CAF50", "#FF9800"],
                     labels={"portfolio return": "Return (%)"},
-                    title="Annual Return: MV vs MV + LightGBM"
-                )
+                    title="Annual Return: MV vs MV + LightGBM" )
                 st.plotly_chart(bar_fig, use_container_width=True)
 
             with col2:
@@ -414,10 +347,7 @@ def main():
                 if len(annual_df) >= 2:
                     st.metric("MV", f"{annual_df.iloc[0]['Sharpe Ratio']:.3f}")
                     st.metric("MV + LightGBM", f"{annual_df.iloc[1]['Sharpe Ratio']:.3f}")
-                else:
-                    st.warning("Insufficient data for Sharpe ratio comparison")
 
-        # Monthly comparison
         if 'date' in monthly_df.columns and 'regular' in monthly_df.columns and 'tree' in monthly_df.columns:
             st.subheader("Monthly Return Comparison")
             monthly_df["date"] = pd.to_datetime(monthly_df["date"])
@@ -427,19 +357,16 @@ def main():
                 x=monthly_df["date"], 
                 y=monthly_df["regular"], 
                 name="Regular", 
-                line=dict(color='blue')
-            ))
+                line=dict(color='blue')  ))
             fig.add_trace(go.Scatter(
                 x=monthly_df["date"], 
                 y=monthly_df["tree"], 
                 name="Predicted (Tree)", 
-                line=dict(color='orange')
-            ))
+                line=dict(color='orange') ))
             fig.update_layout(
                 title="Monthly Returns: Actual vs Predicted", 
                 yaxis_title="Monthly Return", 
-                xaxis_title="Date"
-            )
+                xaxis_title="Date" )
             st.plotly_chart(fig, use_container_width=True)
 
             st.subheader("Monthly Return Table")
@@ -448,10 +375,7 @@ def main():
             st.dataframe(comparison_table.style.format({
                 "regular": "{:.2%}",
                 "tree": "{:.2%}",
-                "Difference": "{:+.2%}"
-            }))
-        else:
-            st.error("Monthly comparison data not available or incorrectly formatted")
+                "Difference": "{:+.2%}" }))
 
 if __name__ == "__main__":
     main()
