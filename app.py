@@ -10,33 +10,15 @@ from io import BytesIO
 import os
 warnings.filterwarnings('ignore')
 
-st.set_page_config(
-    page_title="SP500 Portfolio Optimizer",
-    layout="wide")
+st.set_page_config( page_title="SP500 Portfolio Optimizer", layout="wide")
 
 st.markdown("""
 <style>
-    .main-header {
-        font-size: 2.5rem;
-        font-weight: bold;
-        color: #1f2937;
-        text-align: center;
-        margin-bottom: 2rem; }
-    .metric-card {
-        background-color: #f8fafc;
-        padding: 1rem;
-        border-radius: 0.5rem;
-        border-left: 4px solid #3b82f6; }
-    .prediction-up {
-        color: #10b981;
-        font-weight: bold; }
-    .prediction-down {
-        color: #ef4444;
-        font-weight: bold; }
-    div[data-testid="metric-container"] div[data-testid="metric-label"] {
-        font-size: 1.5rem !important;
-        font-weight: 600 !important;
-        color: #34495e !important; }
+    .main-header { font-size: 2.5rem; font-weight: bold; color: #1f2937; text-align: center; margin-bottom: 2rem; }
+    .metric-card { background-color: #f8fafc; padding: 1rem; border-radius: 0.5rem; border-left: 4px solid #3b82f6; }
+    .prediction-up { color: #10b981; font-weight: bold; }
+    .prediction-down { color: #ef4444; font-weight: bold; }
+    div[data-testid="metric-container"] div[data-testid="metric-label"] { font-size: 1.5rem !important; font-weight: 600 !important; color: #34495e !important; }
 </style>
 """, unsafe_allow_html=True)
 
@@ -101,38 +83,17 @@ def load_static_data():
         st.error(f"Error {str(e)}")
         return None, None, None, None, None, None, None, None
 
-
 def create_line_chart(data, x_col, y_col, title, color='#3b82f6', selected_date=None):
     fig = go.Figure()
-    fig.add_trace(go.Scatter(
-        x=data[x_col],
-        y=data[y_col],
-        mode='lines',
-        name=title,
-        line=dict(color=color, width=2)  ))
-    
+    fig.add_trace(go.Scatter( x=data[x_col], y=data[y_col], mode='lines', name=title, line=dict(color=color, width=2)))
     if selected_date:
         fig.add_vline(x=selected_date, line_width=2, line_dash="dash", line_color="green")
-    
-    fig.update_layout(
-        title=title,
-        xaxis_title="Date",
-        yaxis_title="S&P 500 Index" if y_col == 'y_true' else y_col,
-        hovermode='x unified',
-        title_x=0.5 )
-    
+    fig.update_layout( title=title, xaxis_title="Date", yaxis_title="S&P 500 Index" if y_col == 'y_true' else y_col, hovermode='x unified',title_x=0.5)
     return fig
 
 def create_pie_chart(weights, labels):
-    fig = go.Figure(data=[go.Pie(
-        labels=labels,
-        values=weights,
-        hole=0.3,
-        marker_colors=['#3b82f6', '#ef4444']  )])
-    
-    fig.update_layout(
-        title="Optimal Portfolio Allocation",
-        showlegend=True )
+    fig = go.Figure(data=[go.Pie(labels=labels, values=weights, hole=0.3,marker_colors=['#3b82f6', '#ef4444'])])
+    fig.update_layout( title="Optimal Portfolio Allocation", showlegend=True )
     return fig
 
 def main():
@@ -243,10 +204,7 @@ def main():
     with tab2:
         st.header("Market Analysis") 
         
-        selected_date = st.date_input( "Select Date",   
-                                      value=min_date,
-                                      min_value=min_date,
-                                      max_value=max_date)
+        selected_date = st.date_input( "Select Date", value=min_date, min_value=min_date, max_value=max_date)
         
         selected_data = sp500_data[sp500_data['date'].dt.date <= selected_date]
         bond_data_filtered = bond_data[bond_data['observation_date'].dt.date <= selected_date]
@@ -302,31 +260,22 @@ def main():
         hist_sp500_weight = selected_row["SP500 weight_hist"]
         hist_tbill_weight = selected_row["Tbill weight_hist"]
         hist_return = selected_row["portfolio_return_hist"] 
+        
         col1, col2 = st.columns(2) 
         with col1:
             st.subheader("Predicted Allocation") 
-            pie1 = go.Figure(data=[go.Pie(
-            labels=["SP500", "T-Bills"],
-            values=[sp500_weight, tbill_weight],
-            hole=0.4,
-            marker_colors=["#4CAF50", "#FF9800"])])
+            pie1 = go.Figure(data=[go.Pie( labels=["SP500", "T-Bills"], values=[sp500_weight, tbill_weight], hole=0.4,marker_colors=["#4CAF50", "#FF9800"])])
             pie1.update_layout(width=400, height=350)
             st.plotly_chart(pie1)
-            
         with col2:
             st.subheader("Historical Mean Allocation")
-            pie2 = go.Figure(data=[go.Pie(
-            labels=["SP500", "T-Bills"],
-            values=[hist_sp500_weight, hist_tbill_weight],
-            hole=0.4,
-            marker_colors=["#2196F3", "#FFB300"])])
+            pie2 = go.Figure(data=[go.Pie( labels=["SP500", "T-Bills"], values=[hist_sp500_weight, hist_tbill_weight],hole=0.4, marker_colors=["#2196F3", "#FFB300"])])
             pie2.update_layout(width=400, height=350)
             st.plotly_chart(pie2)
-            
+        
         st.subheader("Investment Recommendations")
         amount = st.number_input("Enter investment amount ($)", min_value=1000, value=10000, step=100)
-        
-        sp500_amt = amount * sp500_weight
+        sp500_amt = amount * sp500_weight 
         tbill_amt = amount * tbill_weight
         expected_gain_pred = amount * (port_return / 100)
         hist_sp500_amt = amount * hist_sp500_weight
@@ -334,64 +283,37 @@ def main():
         expected_gain_hist = amount * (hist_return / 100)
         
         col1, col2 = st.columns(2)
-        
         with col1:
             st.success(f"**Predicted Allocation:**\n"
-                   f"- SP500: ${sp500_amt:,.2f} ({sp500_weight:.3%})\n"
-                   f"- T-Bills: ${tbill_amt:,.2f} ({tbill_weight:.3%})\n\n"
-                   f"**Expected Return:** ${expected_gain_pred:.2f} ({port_return:.2f}%)")       
+               f"- SP500: ${sp500_amt:,.2f} ({sp500_weight:.3%})\n"
+               f"- T-Bills: ${tbill_amt:,.2f} ({tbill_weight:.3%})\n\n"
+               f"**Expected Return:** ${expected_gain_pred:.2f} ({port_return:.2f}%)")       
             st.write("*This return reflects the predicted performance of the model-based allocation.*")
         with col2:
             st.info(f"**Historical Mean Allocation:**\n"
-                f"- SP500: ${hist_sp500_amt:,.0f} ({hist_sp500_weight:.1%})\n"
-                f"- T-Bills: ${hist_tbill_amt:,.0f} ({hist_tbill_weight:.1%})\n\n"
-                f"**Expected Return:** ${expected_gain_hist:.2f} ({hist_return:.2f}%)")
+            f"- SP500: ${hist_sp500_amt:,.0f} ({hist_sp500_weight:.1%})\n"
+            f"- T-Bills: ${hist_tbill_amt:,.0f} ({hist_tbill_weight:.1%})\n\n"
+            f"**Expected Return:** ${expected_gain_hist:.2f} ({hist_return:.2f}%)")
             st.write("*This return reflects the actual performance using historical mean allocation.*")
-                st.subheader("Portfolio Allocation Over Time (Stacked Bar Chart)")
+        
+        st.subheader("Portfolio Allocation Over Time (Stacked Bar Chart)")
         stacked_df = merged_df.copy()
-        stacked_df = stacked_df[["month_label", 
-                                 "SP500 weight_pred", "Tbill weight_pred", 
-                                 "SP500 weight_hist", "Tbill weight_hist"]]
-
+        stacked_df = stacked_df[["month_label", "SP500 weight_pred", "Tbill weight_pred", "SP500 weight_hist", "Tbill weight_hist"]]
+        
         fig = go.Figure()
-        fig.add_trace(go.Bar(
-            x=stacked_df["month_label"],
-            y=stacked_df["SP500 weight_pred"],
-            name="SP500 (Predicted)",
-            marker_color="#4CAF50"))
-        fig.add_trace(go.Bar(
-            x=stacked_df["month_label"],
-            y=stacked_df["Tbill weight_pred"],
-            name="T-Bills (Predicted)",
-            marker_color="#FF9800"))
-        fig.add_trace(go.Bar(
-            x=stacked_df["month_label"],
-            y=stacked_df["SP500 weight_hist"],
-            name="SP500 (Historical)",
-            marker_color="#2196F3" ))
-        fig.add_trace(go.Bar(
-            x=stacked_df["month_label"],
-            y=stacked_df["Tbill weight_hist"],
-            name="T-Bills (Historical)",
-            marker_color="#FFB300" ))
-        fig.update_layout(
-            barmode="group",  # use "stack" if you want stacked bars
-            xaxis_title="Month",
-            yaxis_title="Weight",
-            title="Portfolio Allocation by Month",
-            height=500)
+        fig.add_trace(go.Bar( x=stacked_df["month_label"], y=stacked_df["SP500 weight_pred"], name="SP500 (Predicted)", marker_color="#4CAF50"))
+        fig.add_trace(go.Bar( x=stacked_df["month_label"], y=stacked_df["Tbill weight_pred"], name="T-Bills (Predicted)", marker_color="#FF9800"))
+        fig.add_trace(go.Bar( x=stacked_df["month_label"], y=stacked_df["SP500 weight_hist"], name="SP500 (Historical)", marker_color="#2196F3" ))
+        fig.add_trace(go.Bar( x=stacked_df["month_label"], y=stacked_df["Tbill weight_hist"], name="T-Bills (Historical)", marker_color="#FFB300" ))
+        fig.update_layout(mbarmode="group",  xaxis_title="Month", yaxis_title="Weight", title="Portfolio Allocation by Month", height=500)
         st.plotly_chart(fig, use_container_width=True)
-
+        
         st.subheader("Monthly Return Table")
         table_df = merged_df[["month_label", "portfolio_return_pred", "portfolio_return_hist"]].copy()
         table_df["Difference"] = table_df["portfolio_return_pred"] - table_df["portfolio_return_hist"]
         table_df.columns = ["Month", "Predicted Return", "Historical Return", "Difference"]
-        st.dataframe(table_df.style.format({
-        "Predicted Return": "{:.2%}",
-        "Historical Return": "{:.2%}",
-        "Difference": "{:+.2%}"}))
-
-
+        st.dataframe(table_df.style.format({"Predicted Return": "{:.2%}", "Historical Return": "{:.2%}", "Difference": "{:+.2%}"}))
+        
     with tab4:
         st.header("Performance Comparison")
         
@@ -403,13 +325,7 @@ def main():
                 if annual_df["portfolio return"].dtype == 'object':
                     annual_df["portfolio return"] = annual_df["portfolio return"].str.rstrip('%').astype(float)
                 
-                bar_fig = px.bar(
-                    annual_df,
-                    x="methodology",
-                    y="portfolio return",
-                    color="methodology",
-                    color_discrete_sequence=["#4CAF50", "#FF9800"],
-                    labels={"portfolio return": "Return (%)"},
+                bar_fig = px.bar( annual_df, x="methodology", y="portfolio return", color="methodology", color_discrete_sequence=["#4CAF50", "#FF9800"], labels={"portfolio return": "Return (%)"},
                     title="Annual Return: MV vs MV + LightGBM" )
                 st.plotly_chart(bar_fig, use_container_width=True)
 
@@ -424,20 +340,9 @@ def main():
             monthly_df["Date"] = pd.to_datetime(monthly_df["Date"])
             
             fig = go.Figure()
-            fig.add_trace(go.Scatter(
-                x=monthly_df["Date"], 
-                y=monthly_df["Historical Mean"], 
-                name="Historical Mean", 
-                line=dict(color='blue')))
-            fig.add_trace(go.Scatter(
-                x=monthly_df["Date"], 
-                y=monthly_df["Predicted"], 
-                name="Predicted", 
-                line=dict(color='orange') ))
-            fig.update_layout(
-                title="Monthly Returns: Actual vs Predicted", 
-                yaxis_title="Monthly Return", 
-                xaxis_title="Date" )
+            fig.add_trace(go.Scatter( x=monthly_df["Date"],  y=monthly_df["Historical Mean"], name="Historical Mean",  line=dict(color='blue')))
+            fig.add_trace(go.Scatter( x=monthly_df["Date"],  y=monthly_df["Predicted"], name="Predicted", line=dict(color='orange') ))
+            fig.update_layout( title="Monthly Returns: Actual vs Predicted",  yaxis_title="Monthly Return", xaxis_title="Date" )
             st.plotly_chart(fig, use_container_width=True)
 
 if __name__ == "__main__":
