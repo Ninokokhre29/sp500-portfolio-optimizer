@@ -227,9 +227,13 @@ def main():
                     st.metric("Hit Rate", f"{metrics_row['hit_rate']:.2%}")
             
     with tab2:
-        st.header("Market Analysis")
-        st.markdown("**Select Analysis Date**", unsafe_allow_html=True)
-        selected_date = st.date_input(label="", value=min_date, min_value=min_date, max_value=max_date)
+        st.header("Market Analysis") 
+        
+        selected_date = st.date_input( "Select Date",   
+                                      value=min_date,
+                                      min_value=min_date,
+                                      max_value=max_date)
+        
         selected_data = sp500_data[sp500_data['date'].dt.date <= selected_date]
         bond_data_filtered = bond_data[bond_data['observation_date'].dt.date <= selected_date]
         
