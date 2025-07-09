@@ -277,18 +277,15 @@ def main():
             st.write("*This return reflects the actual performance using historical mean allocation.*")
         
         st.subheader("Portfolio Allocation Over Time")
-        st.markdown("Model-Based Allocation")
         fig_pred = go.Figure()
         fig_pred.add_trace(go.Bar( x=merged_df["month_label"], y=merged_df["SP500 weight_pred"], name="SP500 (Predicted)", marker_color="#4CAF50"))
         fig_pred.add_trace(go.Bar( x=merged_df["month_label"], y=merged_df["Tbill weight_pred"], name="T-Bills (Predicted)", marker_color="#FF9800"))
-        fig_pred.update_layout(barmode="group",  xaxis_title="Month", yaxis_title="Weight", title="Portfolio Allocation by Month", height=500)
+        fig_pred.update_layout(barmode="group",  xaxis_title="Month", yaxis_title="Weight", title="Model-Based Allocation", height=500)
         st.plotly_chart(fig_pred, use_container_width=True)
-        
-        st.markdown("Historical Mean Allocation")
         fig_hist = go.Figure()
         fig_hist.add_trace(go.Bar( x=merged_df["month_label"], y=merged_df["SP500 weight_hist"], name="SP500 (Historical)", marker_color="#2196F3" ))
         fig_hist.add_trace(go.Bar( x=merged_df["month_label"], y=merged_df["Tbill weight_hist"], name="T-Bills (Historical)", marker_color="#FFB300" ))
-        fig_hist.update_layout(barmode="group",  xaxis_title="Month", yaxis_title="Weight", title="Portfolio Allocation by Month", height=500)
+        fig_hist.update_layout(barmode="group",  xaxis_title="Month", yaxis_title="Weight", title="Historical Mean Allocation", height=500)
         st.plotly_chart(fig_hist, use_container_width=True)
         
         st.subheader("Monthly Return Table")
