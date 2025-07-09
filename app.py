@@ -62,10 +62,23 @@ def load_static_data():
         portfolio_url = "https://raw.githubusercontent.com/Ninokokhre29/sp500-portfolio-optimizer/master/portfolio_returns_cleaned.csv"
         monthly_url = 'https://raw.githubusercontent.com/Ninokokhre29/sp500-portfolio-optimizer/master/monthly_comparison.csv'
         annual_url = "https://raw.githubusercontent.com/Ninokokhre29/sp500-portfolio-optimizer/master/annual_comparison.csv"
+        hist_url = "https://raw.githubusercontent.com/Ninokokhre29/sp500-portfolio-optimizer/master/portfolio_returns%20top14%20(regular).xlsx"
         
         portfolio_df = pd.read_csv(portfolio_url)
         monthly_df = pd.read_csv(monthly_url)
         annual_df = pd.read_csv(annual_url)
+        hist_df = pd.read_excel(hist_url)
+        
+        # Prepare predicted and historical data for merging
+        predicted_df = portfolio_df.copy()
+        predicted_df["month_name"] = pd.to_datetime("2024-" + predicted_df["month"].astype(str) + "-01") + pd.offsets.MonthEnd(0)
+        hist_df["month_name"] = pd.to_datetime("2024-" + hist_df["month"].astype(str) + "-01") + pd.offsets.MonthEnd(0)
+
+        merged_df = pd.merge(
+            predicted_df[["month", "SP500 weight", "Tbill weight", "portfolio_return", "month_name"]],
+            hist_df[["month", "SP500 weight", "Tbill weight", "portfolio_return", "month_name"]], on="month_name", suffixes=("_pred", "_hist"))
+        merged_df["month_label"] = merged_df["month_name"].dt.strftime("%B %Y")
+        merged_df = merged_df.sort_values("month_name")
         
         sp500_data = pd.read_csv('https://raw.githubusercontent.com/Ninokokhre29/sp500-portfolio-optimizer/master/top14_results.csv')
         bond_data = pd.read_csv('https://raw.githubusercontent.com/Ninokokhre29/sp500-portfolio-optimizer/master/DGS10.csv')
@@ -84,11 +97,12 @@ def load_static_data():
         bond_data['observation_date'] = pd.to_datetime(bond_data['observation_date'])
         bond_data['Direction'] = np.where(bond_data['DGS10'] > bond_data['DGS10'].shift(1), 'up', 'down')
         
-        return sp500_data, bond_data, predictions, metrics_data, portfolio_df, monthly_df, annual_df
-        
+        return sp500_data, bond_data, predictions, metrics_data, portfolio_df, monthly_df, annual_df, merged_df
+
     except Exception as e:
         st.error(f"Error {str(e)}")
-        return None, None, None, None, None, None, None
+        return None, None, None, None, None, None, None, None
+
 
 def create_line_chart(data, x_col, y_col, title, color='#3b82f6', selected_date=None):
     fig = go.Figure()
@@ -132,7 +146,7 @@ def main():
             (st.session_state.sp500_data, st.session_state.bond_data, 
             st.session_state.predictions, st.session_state.metrics_data,
             st.session_state.portfolio_df, st.session_state.monthly_df,
-            st.session_state.annual_df) = results
+            st.session_state.annual_df, st.session_state.merged_df) = results
             st.session_state.data_loaded = True
         
     sp500_data = st.session_state.sp500_data
@@ -279,6 +293,7 @@ def main():
             
     with tab3:
         st.header("Investment Optimizer")
+        merged_df = st.session_state.merged_df
         month_options = merged_df["month_label"].tolist()
         selected_label = st.selectbox("Select Month", month_options)
         selected_row = merged_df[merged_df["month_label"] == selected_label].iloc[0]
