@@ -296,62 +296,53 @@ def main():
         if len(bond_data_filtered) > 1:
             fig_bond = create_line_chart(bond_data_filtered, 'observation_date', 'DGS10', '10-Year Treasury Rate', '#ef4444')
             st.plotly_chart(fig_bond, use_container_width=True)
-
+            
     with tab3:
-    st.header(" Investment Optimizer")
-
-    month_options = portfolio_df["month_name"]
-    selected_month = st.selectbox("Select Month", month_options)
-
-    row = portfolio_df[portfolio_df["month_name"] == selected_month].iloc[0]
-    sp500_weight = row["SP500 weight"]
-    tbill_weight = row["Tbill weight"]
-    pred_return = row["portfolio_return"]
-
-    # Pie chart
-    st.subheader("Portfolio Allocation")
-    pie_fig = go.Figure(data=[go.Pie(
+        st.header(" Investment Optimizer")
+        month_options = portfolio_df["month_name"] 
+        selected_month = st.selectbox("Select Month", month_options) 
+        
+        row = portfolio_df[portfolio_df["month_name"] == selected_month].iloc[0] 
+        sp500_weight = row["SP500 weight"] 
+        tbill_weight = row["Tbill weight"] 
+        pred_return = row["portfolio_return"] 
+        
+        st.subheader("Portfolio Allocation") 
+        pie_fig = go.Figure(data=[go.Pie(
         labels=["SP500", "T-Bills"],
         values=[sp500_weight, tbill_weight],
         hole=0.4,
-        marker_colors=["#4CAF50", "#FF9800"]
-    )])
-    pie_fig.update_layout(width=500, height=400)
-    st.plotly_chart(pie_fig)
-
-    # Investment Recommendation
-    st.subheader("Investment Recommendation")
-    amount = st.number_input("Enter investment amount ($)", min_value=1000, value=10000, step=100)
-    sp500_amt = amount * sp500_weight
-    tbill_amt = amount * tbill_weight
-    expected_gain = amount * (pred_return / 100)
-
-    st.success(f"**Recommended Allocation:**\n- SP500: ${sp500_amt:,.0f} ({sp500_weight:.1%})\n- T-Bills: ${tbill_amt:,.0f} ({tbill_weight:.1%})\n\n**Expected Return for the Month:** ${expected_gain:.2f} ({pred_return:.2f}%)")
-
-    # Stacked Bar
-    st.subheader("Upcoming Month Allocations")
-    fig_bar = px.bar(
+        marker_colors=["#4CAF50", "#FF9800"] )]) 
+        pie_fig.update_layout(width=500, height=400) 
+        st.plotly_chart(pie_fig) 
+        
+        st.subheader("Investment Recommendation") 
+        amount = st.number_input("Enter investment amount ($)", min_value=1000, value=10000, step=100) 
+        sp500_amt = amount * sp500_weight 
+        tbill_amt = amount * tbill_weight 
+        expected_gain = amount * (pred_return / 100) 
+        
+        st.success(f"**Recommended Allocation:**\n- SP500: ${sp500_amt:,.0f} ({sp500_weight:.1%})\n- T-Bills: ${tbill_amt:,.0f} ({tbill_weight:.1%})\n\n**Expected Return for the Month:** ${expected_gain:.2f} ({pred_return:.2f}%)") 
+        
+        st.subheader("Upcoming Month Allocations") 
+        
+        fig_bar = px.bar(
         portfolio_df,
         x="month_name",
         y=["SP500 weight", "Tbill weight"],
         title="SP500 vs T-Bill Weights Over Time",
-        color_discrete_map={"SP500 weight": "#4CAF50", "Tbill weight": "#FF9800"}
-    )
-    fig_bar.update_layout(barmode='stack', yaxis=dict(tickformat=".0%"))
-    st.plotly_chart(fig_bar, use_container_width=True)
-
-    # Bill Summary
-    st.subheader("📊 Investment Summary")
-    st.markdown(f"""
+        color_discrete_map={"SP500 weight": "#4CAF50", "Tbill weight": "#FF9800"} ) 
+        fig_bar.update_layout(barmode='stack', yaxis=dict(tickformat=".0%")) 
+        st.plotly_chart(fig_bar, use_container_width=True)
+        st.subheader(" Investment Summary") 
+        st.markdown(f"""
     - **SP500 Investment**: ${sp500_amt:,.0f}  
     - **T-Bills Investment**: ${tbill_amt:,.0f}  
     - **Expected Return (Monthly)**: **${expected_gain:.2f}**
-    - **Total Investment**: **${amount:,.0f}**
-    """)
+    - **Total Investment**: **${amount:,.0f}** """)
 
 with tabs4:
-    st.header("📈 Performance Comparison")
-
+    st.header(" Performance Comparison")
     col1, col2 = st.columns(2)
     with col1:
         st.subheader("Annual Return Comparison")
@@ -363,8 +354,7 @@ with tabs4:
             color="methodology",
             color_discrete_sequence=["#4CAF50", "#FF9800"],
             labels={"portfolio return": "Return (%)"},
-            title="Annual Return: MV vs MV + LightGBM"
-        )
+            title="Annual Return: MV vs MV + LightGBM" )
         st.plotly_chart(bar_fig, use_container_width=True)
 
     with col2:
@@ -372,7 +362,6 @@ with tabs4:
         st.metric("MV", annual_df.loc[0, "Sharpe Ratio"])
         st.metric("MV + LightGBM", annual_df.loc[1, "Sharpe Ratio"])
 
-    # Monthly Line Comparison
     st.subheader(" Monthly Return Comparison")
     monthly_df["date"] = pd.to_datetime(monthly_df["date"])
     fig = go.Figure()
@@ -381,15 +370,13 @@ with tabs4:
     fig.update_layout(title="Monthly Returns: Actual vs Predicted", yaxis_title="Monthly Return", xaxis_title="Date")
     st.plotly_chart(fig, use_container_width=True)
 
-    # Table view
     st.subheader(" Monthly Return Table")
     comparison_table = monthly_df.copy()
     comparison_table["Difference"] = comparison_table["tree"] - comparison_table["regular"]
     st.dataframe(comparison_table.style.format({
         "regular": "{:.2%}",
         "tree": "{:.2%}",
-        "Difference": "{:+.2%}"
-    }))
+        "Difference": "{:+.2%}" }))
 
 if __name__ == "__main__":
     main()
