@@ -71,8 +71,8 @@ def load_static_data():
         predicted_df = portfolio_df.copy() 
 
         merged_df = pd.merge(
-            predicted_df[["month", "SP500 weight", "Tbill weight", "portfolio_return", "month_name"]],
-            hist_df[["month", "SP500 weight", "Tbill weight", "portfolio_return", "month_name"]], on="month", suffixes=("_pred", "_hist"))
+            predicted_df[["month", "SP500 weight", "Tbill weight", "portfolio_return"]],
+            hist_df[["month", "SP500 weight", "Tbill weight", "portfolio_return"]], on="month", suffixes=("_pred", "_hist"))
         if month in (5, 12):
             year = 2024
         else:
