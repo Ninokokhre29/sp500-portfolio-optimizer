@@ -11,7 +11,6 @@ import os
 warnings.filterwarnings('ignore')
 
 st.set_page_config( page_title="SP500 Portfolio Optimizer", layout="wide")
-
 st.markdown("""
 <style>
     .main-header { font-size: 2.5rem; font-weight: bold; color: #1f2937; text-align: center; margin-bottom: 2rem; }
@@ -39,37 +38,28 @@ if 'annual_df' not in st.session_state:
 if 'data_loaded' not in st.session_state:
     st.session_state.data_loaded = False
 
-def load_static_data():
-    try:
-        portfolio_df = pd.read_csv("https://raw.githubusercontent.com/Ninokokhre29/sp500-portfolio-optimizer/master/portfolio_returns_cleaned.csv")
-        monthly_df = pd.read_csv('https://raw.githubusercontent.com/Ninokokhre29/sp500-portfolio-optimizer/master/monthly_comparison.csv')
-        annual_df = pd.read_csv("https://raw.githubusercontent.com/Ninokokhre29/sp500-portfolio-optimizer/master/annual_comparison.csv")
-        hist_df = pd.read_excel("https://raw.githubusercontent.com/Ninokokhre29/sp500-portfolio-optimizer/master/portfolio_returns%20top14%20(regular).xlsx")
-        predicted_df = portfolio_df.copy() 
-        merged_df = pd.merge( predicted_df[["month", "SP500 weight", "Tbill weight", "portfolio_return"]], 
-                            hist_df[["month", "SP500 weight", "Tbill weight", "portfolio_return"]], on="month", suffixes=("_pred", "_hist"))
-        merged_df["year"] = np.where(merged_df["month"].between(5, 12), 2024, 2025)
-        merged_df["month_label"] = pd.to_datetime(merged_df["year"].astype(str) + "-" + merged_df["month"].astype(str).str.zfill(2) + "-01").dt.strftime("%B %Y")
-        merged_df = merged_df.sort_values(["year", "month"]) 
-        sp500_data = pd.read_csv('https://raw.githubusercontent.com/Ninokokhre29/sp500-portfolio-optimizer/master/top14_results.csv')
-        bond_data = pd.read_csv('https://raw.githubusercontent.com/Ninokokhre29/sp500-portfolio-optimizer/master/DGS10.csv')
-        response = requests.get('https://raw.githubusercontent.com/Ninokokhre29/sp500-portfolio-optimizer/master/metrics.xlsx')
-        response.raise_for_status()
-        metrics_data = pd.read_excel(BytesIO(response.content))
-        for df in [sp500_data, bond_data, metrics_data, portfolio_df, monthly_df, annual_df]:
-            df.columns = df.columns.str.strip().str.replace('\ufeff', '')
-        sp500_data['date'] = pd.to_datetime(sp500_data['date'])
-        sp500_data['Direction'] = np.where(sp500_data['y_pred'] > sp500_data['y_true'].shift(1), 'up', 'down')
-        predictions = sp500_data[['date', 'y_true', 'y_pred', 'Direction']].copy()
-        bond_data['observation_date'] = pd.to_datetime(bond_data['observation_date'])
-        bond_data['Direction'] = np.where(bond_data['DGS10'] > bond_data['DGS10'].shift(1), 'up', 'down')
+portfolio_df = pd.read_csv("https://raw.githubusercontent.com/Ninokokhre29/sp500-portfolio-optimizer/master/portfolio_returns_cleaned.csv")
+monthly_df = pd.read_csv('https://raw.githubusercontent.com/Ninokokhre29/sp500-portfolio-optimizer/master/monthly_comparison.csv')
+annual_df = pd.read_csv("https://raw.githubusercontent.com/Ninokokhre29/sp500-portfolio-optimizer/master/annual_comparison.csv")
+hist_df = pd.read_excel("https://raw.githubusercontent.com/Ninokokhre29/sp500-portfolio-optimizer/master/portfolio_returns%20top14%20(regular).xlsx")
+predicted_df = portfolio_df.copy() 
+merged_df = pd.merge( predicted_df[["month", "SP500 weight", "Tbill weight", "portfolio_return"]], 
+                     hist_df[["month", "SP500 weight", "Tbill weight", "portfolio_return"]], on="month", suffixes=("_pred", "_hist"))
+merged_df["year"] = np.where(merged_df["month"].between(5, 12), 2024, 2025)
+merged_df["month_label"] = pd.to_datetime(merged_df["year"].astype(str) + "-" + merged_df["month"].astype(str).str.zfill(2) + "-01").dt.strftime("%B %Y")
+merged_df = merged_df.sort_values(["year", "month"]) 
+sp500_data = pd.read_csv('https://raw.githubusercontent.com/Ninokokhre29/sp500-portfolio-optimizer/master/top14_results.csv')
+bond_data = pd.read_csv('https://raw.githubusercontent.com/Ninokokhre29/sp500-portfolio-optimizer/master/DGS10.csv')
+response = requests.get('https://raw.githubusercontent.com/Ninokokhre29/sp500-portfolio-optimizer/master/metrics.xlsx')
+response.raise_for_status()
+metrics_data = pd.read_excel(BytesIO(response.content))
+for df in [sp500_data, bond_data, metrics_data, portfolio_df, monthly_df, annual_df]: df.columns = df.columns.str.strip().str.replace('\ufeff', '')
+sp500_data['date'] = pd.to_datetime(sp500_data['date'])
+sp500_data['Direction'] = np.where(sp500_data['y_pred'] > sp500_data['y_true'].shift(1), 'up', 'down')
+predictions = sp500_data[['date', 'y_true', 'y_pred', 'Direction']].copy()
+bond_data['observation_date'] = pd.to_datetime(bond_data['observation_date'])
+bond_data['Direction'] = np.where(bond_data['DGS10'] > bond_data['DGS10'].shift(1), 'up', 'down')
         
-        return sp500_data, bond_data, predictions, metrics_data, portfolio_df, monthly_df, annual_df, merged_df
-
-    except Exception as e:
-        st.error(f"Error {str(e)}")
-        return None, None, None, None, None, None, None, None
-
 def create_line_chart(data, x_col, y_col, title, color='#3b82f6', selected_date=None):
     fig = go.Figure()
     fig.add_trace(go.Scatter( x=data[x_col], y=data[y_col], mode='lines', name=title, line=dict(color=color, width=2)))
@@ -85,15 +75,15 @@ def create_pie_chart(weights, labels):
 
 def main():
     st.markdown('<h1 class="main-header">SP500 Portfolio Optimizer</h1>', unsafe_allow_html=True)
-    if not st.session_state.data_loaded:
-        results = load_static_data()     
-        if all(data is not None for data in results):
-            (st.session_state.sp500_data, st.session_state.bond_data, 
-            st.session_state.predictions, st.session_state.metrics_data,
-            st.session_state.portfolio_df, st.session_state.monthly_df,
-            st.session_state.annual_df, st.session_state.merged_df) = results
-            st.session_state.data_loaded = True
-        
+    st.session_state.sp500_data = sp500_data
+    st.session_state.bond_data = bond_data
+    st.session_state.predictions = predictions
+    st.session_state.metrics_data = metrics_data
+    st.session_state.portfolio_df = portfolio_df
+    st.session_state.monthly_df = monthly_df
+    st.session_state.annual_df = annual_df
+    st.session_state.merged_df = merged_df
+    
     sp500_data = st.session_state.sp500_data
     bond_data = st.session_state.bond_data
     predictions = st.session_state.predictions
