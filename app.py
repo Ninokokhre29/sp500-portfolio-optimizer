@@ -230,7 +230,7 @@ def main():
             f"- SP500: ${hist_sp500_amt:,.0f} ({hist_sp500_weight:.1%})\n"
             f"- T-Bills: ${hist_tbill_amt:,.0f} ({hist_tbill_weight:.1%})\n\n"
             f"**Expected Return:** ${expected_gain_hist:.2f} ({hist_return:.2f}%)")
-            st.write("*This return reflects the actual performance using historical mean allocation.*")
+            st.write("*This return reflects the actual performance of the historical mean allocation.*")
         
         st.subheader("Portfolio Allocation Over Time")
         fig_pred = go.Figure()
