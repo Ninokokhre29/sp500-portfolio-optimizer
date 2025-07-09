@@ -202,7 +202,6 @@ def main():
             
     with tab3:
         st.header("Investment Optimizer")
-        merged_df = st.session_state.merged_df
         month_options = merged_df["month_label"].tolist()
         selected_label = st.selectbox("Select Month", month_options)
         selected_row = merged_df[merged_df["month_label"] == selected_label].iloc[0]
