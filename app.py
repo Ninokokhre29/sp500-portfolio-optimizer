@@ -73,12 +73,10 @@ def load_static_data():
         merged_df = pd.merge(
             predicted_df[["month", "SP500 weight", "Tbill weight", "portfolio_return"]],
             hist_df[["month", "SP500 weight", "Tbill weight", "portfolio_return"]], on="month", suffixes=("_pred", "_hist"))
-        if month in (5, 12):
-            year = 2024
-        else:
-            year = 2025
-        merged_df["month_label"] = pd.to_datetime(f"{year}-{month:02d}-01").strftime("%B %Y")
-        merged_df = merged_df.sort_values("month_name")
+        
+        merged_df["year"] = np.where(merged_df["month"].isin([5, 12]), 2024, 2025)
+        merged_df["month_label"] = pd.to_datetime(merged_df["year"].astype(str) + "-" + merged_df["month"].astype(str).str.zfill(2) + "-01").dt.strftime("%B %Y")
+        merged_df = merged_df.sort_values("month")
         
         sp500_data = pd.read_csv('https://raw.githubusercontent.com/Ninokokhre29/sp500-portfolio-optimizer/master/top14_results.csv')
         bond_data = pd.read_csv('https://raw.githubusercontent.com/Ninokokhre29/sp500-portfolio-optimizer/master/DGS10.csv')
