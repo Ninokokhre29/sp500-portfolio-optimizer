@@ -10,11 +10,12 @@ from io import BytesIO
 import os
 warnings.filterwarnings('ignore')
 
-st.set_page_config( page_title="SP500 Portfolio Optimizer", layout="wide")
-st.title(" SP500 Portfolio Optimizer")
+st.set_page_config( page_title="S&P500 Portfolio Optimizer", layout="wide")
+st.markdown(""" 
+<h1 style="text-align: center; font-size: 3rem; font-weight: bold; color: #1f2937;"> S&P500 Portfolio Optimizer </h1>
+""", unsafe_allow_html=True)
 st.markdown(""" 
 <style> 
-.main-header { font-size: 2.5rem; font-weight: bold; color: #1f2937; text-align: center; margin-bottom: 2rem; }
 .metric-card { background-color: #f8fafc; padding: 1rem; border-radius: 0.5rem; border-left: 4px solid #3b82f6; }
 .prediction-up { color: #10b981; font-weight: bold; }
 .prediction-down { color: #ef4444; font-weight: bold; }
