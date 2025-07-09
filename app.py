@@ -145,16 +145,6 @@ def main():
     monthly_df = st.session_state.monthly_df
     annual_df = st.session_state.annual_df
     
-    st.subheader("Select Analysis Date")
-    min_date = sp500_data['date'].min().date()
-    max_date = sp500_data['date'].max().date()
-    
-    selected_date = st.date_input(
-        "Choose Date",
-        value=min_date,
-        min_value=min_date,
-        max_value=max_date )
-    
     tab1, tab2, tab3, tab4 = st.tabs(["Overview", "Market Analysis", "Optimization", "Performance"])
     
     with tab1:
@@ -238,6 +228,15 @@ def main():
             
     with tab2:
         st.header("Market Analysis")
+        st.subheader("Select Analysis Date") 
+        min_date = sp500_data['date'].min().date() 
+        max_date = sp500_data['date'].max().date() 
+        selected_date = st.date_input(
+            label="", 
+            value=min_date, 
+            min_value=min_date, 
+            max_value=max_date )
+        
         selected_data = sp500_data[sp500_data['date'].dt.date <= selected_date]
         bond_data_filtered = bond_data[bond_data['observation_date'].dt.date <= selected_date]
         
