@@ -11,6 +11,7 @@ import os
 warnings.filterwarnings('ignore')
 
 st.set_page_config( page_title="SP500 Portfolio Optimizer", layout="wide")
+st.title(" SP500 Portfolio Optimizer")
 st.markdown(""" 
 <style> 
 .main-header { font-size: 2.5rem; font-weight: bold; color: #1f2937; text-align: center; margin-bottom: 2rem; }
