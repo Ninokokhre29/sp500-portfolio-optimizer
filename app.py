@@ -12,7 +12,7 @@ warnings.filterwarnings('ignore')
 
 st.set_page_config(
     page_title="SP500 Portfolio Optimizer",
-    layout="wide" )
+    layout="wide")
 
 st.markdown("""
 <style>
@@ -45,6 +45,7 @@ st.markdown("""
 </style>
 """, unsafe_allow_html=True)
 
+# Initialize session state
 if 'sp500_data' not in st.session_state:
     st.session_state.sp500_data = None
 if 'bond_data' not in st.session_state:
@@ -53,37 +54,57 @@ if 'predictions' not in st.session_state:
     st.session_state.predictions = None
 if 'metrics_data' not in st.session_state:
     st.session_state.metrics_data = None
+if 'portfolio_df' not in st.session_state:
+    st.session_state.portfolio_df = None
+if 'monthly_df' not in st.session_state:
+    st.session_state.monthly_df = None
+if 'annual_df' not in st.session_state:
+    st.session_state.annual_df = None
 if 'data_loaded' not in st.session_state:
     st.session_state.data_loaded = False
 
 def load_static_data():
+    """Load all required data from GitHub repository"""
     try:
-        portfolio_df = pd.read_csv("https://github.com/Ninokokhre29/sp500-portfolio-optimizer/blob/master/portfolio_returns_cleaned.csv")
-        monthly_df = pd.read_csv('https://github.com/Ninokokhre29/sp500-portfolio-optimizer/blob/master/monthly_comparison.csv')
-        annual_df = pd.read_csv("https://github.com/Ninokokhre29/sp500-portfolio-optimizer/blob/master/annual_comparison.csv")
+        # Load portfolio data - Fixed URL to raw content
+        portfolio_url = "https://raw.githubusercontent.com/Ninokokhre29/sp500-portfolio-optimizer/master/portfolio_returns_cleaned.csv"
+        monthly_url = 'https://raw.githubusercontent.com/Ninokokhre29/sp500-portfolio-optimizer/master/monthly_comparison.csv'
+        annual_url = "https://raw.githubusercontent.com/Ninokokhre29/sp500-portfolio-optimizer/master/annual_comparison.csv"
+        
+        portfolio_df = pd.read_csv(portfolio_url)
+        monthly_df = pd.read_csv(monthly_url)
+        annual_df = pd.read_csv(annual_url)
+        
+        # Load main data
         sp500_data = pd.read_csv('https://raw.githubusercontent.com/Ninokokhre29/sp500-portfolio-optimizer/master/top14_results.csv')
         bond_data = pd.read_csv('https://raw.githubusercontent.com/Ninokokhre29/sp500-portfolio-optimizer/master/DGS10.csv')
+        
+        # Load metrics data
         response = requests.get('https://raw.githubusercontent.com/Ninokokhre29/sp500-portfolio-optimizer/master/metrics.xlsx')
         response.raise_for_status()
         metrics_data = pd.read_excel(BytesIO(response.content))
         
-        sp500_data.columns = sp500_data.columns.str.strip().str.replace('\ufeff', '')
-        bond_data.columns = bond_data.columns.str.strip().str.replace('\ufeff', '')
-        metrics_data.columns = metrics_data.columns.str.strip().str.replace('\ufeff', '')
+        # Clean column names
+        for df in [sp500_data, bond_data, metrics_data, portfolio_df, monthly_df, annual_df]:
+            df.columns = df.columns.str.strip().str.replace('\ufeff', '')
         
+        # Process SP500 data
         sp500_data['date'] = pd.to_datetime(sp500_data['date'])
         sp500_data['Direction'] = np.where(sp500_data['y_pred'] > sp500_data['y_true'].shift(1), 'up', 'down')
         predictions = sp500_data[['date', 'y_true', 'y_pred', 'Direction']].copy()
         
+        # Process bond data
         bond_data['observation_date'] = pd.to_datetime(bond_data['observation_date'])
         bond_data['Direction'] = np.where(bond_data['DGS10'] > bond_data['DGS10'].shift(1), 'up', 'down')
         
-        return sp500_data, bond_data, predictions, metrics_data
+        return sp500_data, bond_data, predictions, metrics_data, portfolio_df, monthly_df, annual_df
+        
     except Exception as e:
         st.error(f"Error loading data: {str(e)}")
-        return None, None, None, None
+        return None, None, None, None, None, None, None
 
 def calculate_optimal_weights(expected_returns, cov_matrix, risk_free_rate=0.02):
+    """Calculate optimal portfolio weights using Markowitz optimization"""
     n = len(expected_returns)
     weights = np.random.dirichlet(np.ones(n), size=1)[0]
     
@@ -94,13 +115,15 @@ def calculate_optimal_weights(expected_returns, cov_matrix, risk_free_rate=0.02)
     return weights, portfolio_return, portfolio_risk, sharpe_ratio
 
 def create_line_chart(data, x_col, y_col, title, color='#3b82f6', selected_date=None):
+    """Create a line chart with optional date marker"""
     fig = go.Figure()
     fig.add_trace(go.Scatter(
         x=data[x_col],
         y=data[y_col],
         mode='lines',
         name=title,
-        line=dict(color=color, width=2) ))
+        line=dict(color=color, width=2)
+    ))
     
     if selected_date:
         fig.add_vline(x=selected_date, line_width=2, line_dash="dash", line_color="green")
@@ -110,35 +133,41 @@ def create_line_chart(data, x_col, y_col, title, color='#3b82f6', selected_date=
         xaxis_title="Date",
         yaxis_title="S&P 500 Index" if y_col == 'y_true' else y_col,
         hovermode='x unified',
-        title_x=0.5)
+        title_x=0.5
+    )
     
     return fig
 
 def create_pie_chart(weights, labels):
+    """Create a pie chart for portfolio allocation"""
     fig = go.Figure(data=[go.Pie(
         labels=labels,
         values=weights,
         hole=0.3,
-        marker_colors=['#3b82f6', '#ef4444'])])
+        marker_colors=['#3b82f6', '#ef4444']
+    )])
     
     fig.update_layout(
         title="Optimal Portfolio Allocation",
-        showlegend=True )
+        showlegend=True
+    )
     return fig
 
 def main():
     st.markdown('<h1 class="main-header">SP500 Portfolio Optimizer</h1>', unsafe_allow_html=True)
 
+    # Load data if not already loaded
     if not st.session_state.data_loaded:
         with st.spinner("Loading data..."):
-            sp500_data, bond_data, predictions, metrics_data = load_static_data()
+            results = load_static_data()
             
-            if all(data is not None for data in [sp500_data, bond_data, predictions, metrics_data]):
-                st.session_state.sp500_data = sp500_data
-                st.session_state.bond_data = bond_data
-                st.session_state.predictions = predictions
-                st.session_state.metrics_data = metrics_data
+            if all(data is not None for data in results):
+                (st.session_state.sp500_data, st.session_state.bond_data, 
+                 st.session_state.predictions, st.session_state.metrics_data,
+                 st.session_state.portfolio_df, st.session_state.monthly_df,
+                 st.session_state.annual_df) = results
                 st.session_state.data_loaded = True
+                st.success("Data loaded successfully!")
             else:
                 st.error("Failed to load data. Please check your file paths and data format.")
                 return
@@ -147,13 +176,17 @@ def main():
         st.error("Data not loaded. Please check your file paths.")
         return
         
+    # Get data from session state
     sp500_data = st.session_state.sp500_data
     bond_data = st.session_state.bond_data
     predictions = st.session_state.predictions
     metrics_data = st.session_state.metrics_data
+    portfolio_df = st.session_state.portfolio_df
+    monthly_df = st.session_state.monthly_df
+    annual_df = st.session_state.annual_df
     
+    # Date selection
     st.subheader("Select Analysis Date")
-
     min_date = sp500_data['date'].min().date()
     max_date = sp500_data['date'].max().date()
     
@@ -161,8 +194,10 @@ def main():
         "Choose Date",
         value=min_date,
         min_value=min_date,
-        max_value=max_date)
+        max_value=max_date
+    )
     
+    # Create tabs
     tab1, tab2, tab3, tab4 = st.tabs(["Overview", "Market Analysis", "Optimization", "Performance"])
     
     with tab1:
@@ -237,7 +272,7 @@ def main():
                 st.subheader("Dataset Overview")
                 st.metric("Date Range", "2021-01-04 - 2025-04-30")
                 st.metric("Total Rows", "1086")
-                st.metric(" Predictions Made On", f"{min_date} - {max_date}")
+                st.metric("Predictions Made On", f"{min_date} - {max_date}")
             with col2:
                 st.subheader("Model Evaluation")
                 if len(metrics_data) > 2:
@@ -298,85 +333,125 @@ def main():
             st.plotly_chart(fig_bond, use_container_width=True)
             
     with tab3:
-        st.header(" Investment Optimizer")
-        month_options = portfolio_df["month_name"] 
-        selected_month = st.selectbox("Select Month", month_options) 
+        st.header("Investment Optimizer")
         
-        row = portfolio_df[portfolio_df["month_name"] == selected_month].iloc[0] 
-        sp500_weight = row["SP500 weight"] 
-        tbill_weight = row["Tbill weight"] 
-        pred_return = row["portfolio_return"] 
-        
-        st.subheader("Portfolio Allocation") 
-        pie_fig = go.Figure(data=[go.Pie(
-        labels=["SP500", "T-Bills"],
-        values=[sp500_weight, tbill_weight],
-        hole=0.4,
-        marker_colors=["#4CAF50", "#FF9800"] )]) 
-        pie_fig.update_layout(width=500, height=400) 
-        st.plotly_chart(pie_fig) 
-        
-        st.subheader("Investment Recommendation") 
-        amount = st.number_input("Enter investment amount ($)", min_value=1000, value=10000, step=100) 
-        sp500_amt = amount * sp500_weight 
-        tbill_amt = amount * tbill_weight 
-        expected_gain = amount * (pred_return / 100) 
-        
-        st.success(f"**Recommended Allocation:**\n- SP500: ${sp500_amt:,.0f} ({sp500_weight:.1%})\n- T-Bills: ${tbill_amt:,.0f} ({tbill_weight:.1%})\n\n**Expected Return for the Month:** ${expected_gain:.2f} ({pred_return:.2f}%)") 
-        
-        st.subheader("Upcoming Month Allocations") 
-        
-        fig_bar = px.bar(
-        portfolio_df,
-        x="month_name",
-        y=["SP500 weight", "Tbill weight"],
-        title="SP500 vs T-Bill Weights Over Time",
-        color_discrete_map={"SP500 weight": "#4CAF50", "Tbill weight": "#FF9800"} ) 
-        fig_bar.update_layout(barmode='stack', yaxis=dict(tickformat=".0%")) 
-        st.plotly_chart(fig_bar, use_container_width=True)
-        st.subheader(" Investment Summary") 
-        st.markdown(f"""
-    - **SP500 Investment**: ${sp500_amt:,.0f}  
-    - **T-Bills Investment**: ${tbill_amt:,.0f}  
-    - **Expected Return (Monthly)**: **${expected_gain:.2f}**
-    - **Total Investment**: **${amount:,.0f}** """)
+        # Check if portfolio_df has the expected columns
+        if 'month_name' in portfolio_df.columns:
+            month_options = portfolio_df["month_name"].unique()
+            selected_month = st.selectbox("Select Month", month_options)
+            
+            row = portfolio_df[portfolio_df["month_name"] == selected_month].iloc[0]
+            sp500_weight = row["SP500 weight"]
+            tbill_weight = row["Tbill weight"]
+            pred_return = row["portfolio_return"]
+            
+            st.subheader("Portfolio Allocation")
+            pie_fig = go.Figure(data=[go.Pie(
+                labels=["SP500", "T-Bills"],
+                values=[sp500_weight, tbill_weight],
+                hole=0.4,
+                marker_colors=["#4CAF50", "#FF9800"]
+            )])
+            pie_fig.update_layout(width=500, height=400)
+            st.plotly_chart(pie_fig)
+            
+            st.subheader("Investment Recommendation")
+            amount = st.number_input("Enter investment amount ($)", min_value=1000, value=10000, step=100)
+            sp500_amt = amount * sp500_weight
+            tbill_amt = amount * tbill_weight
+            expected_gain = amount * (pred_return / 100)
+            
+            st.success(f"**Recommended Allocation:**\n- SP500: ${sp500_amt:,.0f} ({sp500_weight:.1%})\n- T-Bills: ${tbill_amt:,.0f} ({tbill_weight:.1%})\n\n**Expected Return for the Month:** ${expected_gain:.2f} ({pred_return:.2f}%)")
+            
+            st.subheader("Upcoming Month Allocations")
+            
+            fig_bar = px.bar(
+                portfolio_df,
+                x="month_name",
+                y=["SP500 weight", "Tbill weight"],
+                title="SP500 vs T-Bill Weights Over Time",
+                color_discrete_map={"SP500 weight": "#4CAF50", "Tbill weight": "#FF9800"}
+            )
+            fig_bar.update_layout(barmode='stack', yaxis=dict(tickformat=".0%"))
+            st.plotly_chart(fig_bar, use_container_width=True)
+            
+            st.subheader("Investment Summary")
+            st.markdown(f"""
+            - **SP500 Investment**: ${sp500_amt:,.0f}  
+            - **T-Bills Investment**: ${tbill_amt:,.0f}  
+            - **Expected Return (Monthly)**: **${expected_gain:.2f}**
+            - **Total Investment**: **${amount:,.0f}**
+            """)
+        else:
+            st.error("Portfolio data not available or incorrectly formatted")
 
-with tabs4:
-    st.header(" Performance Comparison")
-    col1, col2 = st.columns(2)
-    with col1:
-        st.subheader("Annual Return Comparison")
-        annual_df["portfolio return"] = annual_df["portfolio return"].str.rstrip('%').astype(float)
-        bar_fig = px.bar(
-            annual_df,
-            x="methodology",
-            y="portfolio return",
-            color="methodology",
-            color_discrete_sequence=["#4CAF50", "#FF9800"],
-            labels={"portfolio return": "Return (%)"},
-            title="Annual Return: MV vs MV + LightGBM" )
-        st.plotly_chart(bar_fig, use_container_width=True)
+    with tab4:
+        st.header("Performance Comparison")
+        
+        # Check if annual_df has the expected columns
+        if 'methodology' in annual_df.columns and 'portfolio return' in annual_df.columns:
+            col1, col2 = st.columns(2)
+            
+            with col1:
+                st.subheader("Annual Return Comparison")
+                # Handle percentage conversion more safely
+                if annual_df["portfolio return"].dtype == 'object':
+                    annual_df["portfolio return"] = annual_df["portfolio return"].str.rstrip('%').astype(float)
+                
+                bar_fig = px.bar(
+                    annual_df,
+                    x="methodology",
+                    y="portfolio return",
+                    color="methodology",
+                    color_discrete_sequence=["#4CAF50", "#FF9800"],
+                    labels={"portfolio return": "Return (%)"},
+                    title="Annual Return: MV vs MV + LightGBM"
+                )
+                st.plotly_chart(bar_fig, use_container_width=True)
 
-    with col2:
-        st.subheader("Sharpe Ratio")
-        st.metric("MV", annual_df.loc[0, "Sharpe Ratio"])
-        st.metric("MV + LightGBM", annual_df.loc[1, "Sharpe Ratio"])
+            with col2:
+                st.subheader("Sharpe Ratio")
+                if len(annual_df) >= 2:
+                    st.metric("MV", f"{annual_df.iloc[0]['Sharpe Ratio']:.3f}")
+                    st.metric("MV + LightGBM", f"{annual_df.iloc[1]['Sharpe Ratio']:.3f}")
+                else:
+                    st.warning("Insufficient data for Sharpe ratio comparison")
 
-    st.subheader(" Monthly Return Comparison")
-    monthly_df["date"] = pd.to_datetime(monthly_df["date"])
-    fig = go.Figure()
-    fig.add_trace(go.Scatter(x=monthly_df["date"], y=monthly_df["regular"], name="Regular", line=dict(color='blue')))
-    fig.add_trace(go.Scatter(x=monthly_df["date"], y=monthly_df["tree"], name="Predicted (Tree)", line=dict(color='orange')))
-    fig.update_layout(title="Monthly Returns: Actual vs Predicted", yaxis_title="Monthly Return", xaxis_title="Date")
-    st.plotly_chart(fig, use_container_width=True)
+        # Monthly comparison
+        if 'date' in monthly_df.columns and 'regular' in monthly_df.columns and 'tree' in monthly_df.columns:
+            st.subheader("Monthly Return Comparison")
+            monthly_df["date"] = pd.to_datetime(monthly_df["date"])
+            
+            fig = go.Figure()
+            fig.add_trace(go.Scatter(
+                x=monthly_df["date"], 
+                y=monthly_df["regular"], 
+                name="Regular", 
+                line=dict(color='blue')
+            ))
+            fig.add_trace(go.Scatter(
+                x=monthly_df["date"], 
+                y=monthly_df["tree"], 
+                name="Predicted (Tree)", 
+                line=dict(color='orange')
+            ))
+            fig.update_layout(
+                title="Monthly Returns: Actual vs Predicted", 
+                yaxis_title="Monthly Return", 
+                xaxis_title="Date"
+            )
+            st.plotly_chart(fig, use_container_width=True)
 
-    st.subheader(" Monthly Return Table")
-    comparison_table = monthly_df.copy()
-    comparison_table["Difference"] = comparison_table["tree"] - comparison_table["regular"]
-    st.dataframe(comparison_table.style.format({
-        "regular": "{:.2%}",
-        "tree": "{:.2%}",
-        "Difference": "{:+.2%}" }))
+            st.subheader("Monthly Return Table")
+            comparison_table = monthly_df.copy()
+            comparison_table["Difference"] = comparison_table["tree"] - comparison_table["regular"]
+            st.dataframe(comparison_table.style.format({
+                "regular": "{:.2%}",
+                "tree": "{:.2%}",
+                "Difference": "{:+.2%}"
+            }))
+        else:
+            st.error("Monthly comparison data not available or incorrectly formatted")
 
 if __name__ == "__main__":
     main()
