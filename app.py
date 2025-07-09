@@ -336,8 +336,8 @@ def main():
         col1, col2 = st.columns(2)
         with col1:
             st.success(f"**Predicted Allocation:**\n"
-                   f"- SP500: ${sp500_amt:,.0f} ({sp500_weight:.1%})\n"
-                   f"- T-Bills: ${tbill_amt:,.0f} ({tbill_weight:.1%})\n\n"
+                   f"- SP500: ${sp500_amt:,.2f} ({sp500_weight:.3%})\n"
+                   f"- T-Bills: ${tbill_amt:,.2f} ({tbill_weight:.3%})\n\n"
                    f"**Expected Return:** ${expected_gain_pred:.2f} ({port_return:.2f}%)")       
             st.write("*This return reflects the predicted performance of the model-based allocation.*")
         with col2:
