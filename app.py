@@ -156,8 +156,8 @@ def main():
     annual_df = st.session_state.annual_df
     merged_df = st.session_state.merged_df
 
-    min_date = merged_df['date'].min().date() 
-    max_date = merged_df['date'].max().date()
+    min_date = sp500_data['date'].min().date() 
+    max_date = sp500_data['date'].max().date()
     
     tab1, tab2, tab3, tab4 = st.tabs(["Overview", "Market Analysis", "Optimization", "Performance"])
     
