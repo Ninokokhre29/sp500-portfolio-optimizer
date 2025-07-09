@@ -134,7 +134,6 @@ def main():
             st.session_state.portfolio_df, st.session_state.monthly_df,
             st.session_state.annual_df) = results
             st.session_state.data_loaded = True
-    return
         
     sp500_data = st.session_state.sp500_data
     bond_data = st.session_state.bond_data
