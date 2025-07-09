@@ -87,7 +87,7 @@ def load_static_data():
         return sp500_data, bond_data, predictions, metrics_data, portfolio_df, monthly_df, annual_df
         
     except Exception as e:
-        st.error(f"Error loading data: {str(e)}")
+        st.error(f"Error {str(e)}")
         return None, None, None, None, None, None, None
 
 def create_line_chart(data, x_col, y_col, title, color='#3b82f6', selected_date=None):
@@ -126,16 +126,15 @@ def create_pie_chart(weights, labels):
 def main():
     st.markdown('<h1 class="main-header">SP500 Portfolio Optimizer</h1>', unsafe_allow_html=True)
     if not st.session_state.data_loaded:
-        with st.spinner("Loading data..."):
-            results = load_static_data()
+        results = load_static_data()
             
-            if all(data is not None for data in results):
-                (st.session_state.sp500_data, st.session_state.bond_data, 
-                 st.session_state.predictions, st.session_state.metrics_data,
-                 st.session_state.portfolio_df, st.session_state.monthly_df,
-                 st.session_state.annual_df) = results
-                st.session_state.data_loaded = True
-        return
+        if all(data is not None for data in results):
+            (st.session_state.sp500_data, st.session_state.bond_data, 
+            st.session_state.predictions, st.session_state.metrics_data,
+            st.session_state.portfolio_df, st.session_state.monthly_df,
+            st.session_state.annual_df) = results
+            st.session_state.data_loaded = True
+    return
         
     sp500_data = st.session_state.sp500_data
     bond_data = st.session_state.bond_data
