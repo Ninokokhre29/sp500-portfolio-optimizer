@@ -53,11 +53,6 @@ def create_line_chart(data, x_col, y_col, title, color='#3b82f6', selected_date=
     fig.update_layout( title=title, xaxis_title="Date", yaxis_title="S&P 500 Index" if y_col == 'y_true' else y_col, hovermode='x unified',title_x=0.5)
     return fig
 
-def create_pie_chart(weights, labels):
-    fig = go.Figure(data=[go.Pie(labels=labels, values=weights, hole=0.3,marker_colors=['#3b82f6', '#ef4444'])])
-    fig.update_layout( title="Optimal Portfolio Allocation", showlegend=True )
-    return fig
-
 def main():
     min_date = sp500_data['date'].min().date() 
     max_date = sp500_data['date'].max().date()
