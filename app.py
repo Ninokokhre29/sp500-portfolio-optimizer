@@ -200,7 +200,7 @@ def main():
             st.plotly_chart(pie1)
         with col2:
             st.subheader("Historical Mean Allocation")
-            pie2 = go.Figure(data=[go.Pie( labels=["SP500", "T-Bills"], values=[hist_sp500_weight, hist_tbill_weight],hole=0.4, marker_colors=["#2196F3", "#FFB300"])])
+            pie2 = go.Figure(data=[go.Pie( labels=["T-Bills", "SP500"], values=[hist_sp500_weight, hist_tbill_weight],hole=0.4, marker_colors=["#2196F3", "#FFB300"])])
             pie2.update_layout(width=400, height=350)
             st.plotly_chart(pie2)
         
@@ -210,7 +210,7 @@ def main():
         tbill_amt = amount * tbill_weight
         expected_gain_pred = amount * (port_return / 100)
         hist_sp500_amt = amount * hist_sp500_weight
-        hist_tbill_amt = amount * hist_tbill_weight
+        hist_tbill_amt  = amount * hist_tbill_weight
         expected_gain_hist = amount * (hist_return / 100)
         
         col1, col2 = st.columns(2)
@@ -223,7 +223,7 @@ def main():
         with col2:
             st.info(f"**Historical Mean Allocation:**\n"
             f"- SP500: ${hist_sp500_amt:,.0f} ({hist_sp500_weight:.1%})\n"
-            f"- T-Bills: ${hist_tbill_amt:,.0f} ({hist_tbill_weight:.1%})\n\n"
+            f"- T-Bills : ${hist_tbill_amt:,.0f} ({hist_tbill_weight:.1%})\n\n"
             f"**Expected Return:** ${expected_gain_hist:.2f} ({hist_return:.2f}%)")
             st.write("*This return reflects the actual performance of the historical mean allocation.*")
         
