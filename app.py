@@ -227,8 +227,8 @@ def main():
         fig_pred.update_layout(barmode="group",  xaxis_title="Month", yaxis_title="Weight", title="Model-Based Allocation", height=500)
         st.plotly_chart(fig_pred, use_container_width=True)
         fig_hist = go.Figure()
-        fig_hist.add_trace(go.Bar( x=merged_df["month_label"], y=merged_df["SP500 weight_hist"], name="SP500 (Historical)", marker_color="#2196F3" ))
-        fig_hist.add_trace(go.Bar( x=merged_df["month_label"], y=merged_df["Tbill weight_hist"], name="T-Bills (Historical)", marker_color="#FFB300" ))
+        fig_hist.add_trace(go.Bar( x=merged_df["month_label"], y=merged_df["SP500 weight_hist"], name="T-Bills (Historical)", marker_color="#2196F3" ))
+        fig_hist.add_trace(go.Bar( x=merged_df["month_label"], y=merged_df["Tbill weight_hist"], name="SP500 (Historical)", marker_color="#FFB300" ))
         fig_hist.update_layout(barmode="group",  xaxis_title="Month", yaxis_title="Weight", title="Historical Mean Allocation", height=500)
         st.plotly_chart(fig_hist, use_container_width=True)
         
