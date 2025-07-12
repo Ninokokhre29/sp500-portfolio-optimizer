@@ -239,12 +239,6 @@ def main():
         fig_hist.update_layout(barmode="group",  xaxis_title="Month", yaxis_title="Weight", title="Historical Mean Allocation", height=500)
         st.plotly_chart(fig_hist, use_container_width=True)
         
-        st.subheader("Monthly Return Table")
-        table_df = merged_df[["month_label", "portfolio_return_pred", "portfolio_return_hist"]].copy()
-        table_df["Difference"] = table_df["portfolio_return_pred"] - table_df["portfolio_return_hist"]
-        table_df.columns = ["Month", "Predicted Return", "Historical Return", "Difference"]
-        st.dataframe(table_df.style.format({"Predicted Return": "{:.2%}", "Historical Return": "{:.2%}", "Difference": "{:+.2%}"}))
-        
     with tab4:
         st.header("Performance Comparison")
         if 'methodology' in annual_df.columns and 'portfolio return' in annual_df.columns:
