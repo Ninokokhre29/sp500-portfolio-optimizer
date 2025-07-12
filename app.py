@@ -192,17 +192,10 @@ def main():
         hist_tbill_weight = selected_row["Tbill weight_hist"]
         hist_return = selected_row["portfolio_return_hist"] 
         
-        col1, col2 = st.columns(2) 
-        with col1:
-            st.subheader("Predicted Allocation") 
-            pie1 = go.Figure(data=[go.Pie( labels=["SP500", "T-Bills"], values=[sp500_weight, tbill_weight], hole=0.4,marker_colors=["#4CAF50", "#FF9800"])])
-            pie1.update_layout(width=400, height=350)
-            st.plotly_chart(pie1)
-        with col2:
-            st.subheader("Historical Mean Allocation")
-            pie2 = go.Figure(data=[go.Pie( labels=["SP500", "T-Bills"], values=[hist_sp500_weight, hist_tbill_weight],hole=0.4, marker_colors=["#2196F3", "#FFB300"])])
-            pie2.update_layout(width=400, height=350)
-            st.plotly_chart(pie2)
+        st.subheader("Predicted Allocation") 
+        pie1 = go.Figure(data=[go.Pie( labels=["SP500", "T-Bills"], values=[sp500_weight, tbill_weight], hole=0.4,marker_colors=["#4CAF50", "#FF9800"])])
+        pie1.update_layout(width=400, height=350)
+        st.plotly_chart(pie1)
         
         st.subheader("Investment Recommendations")
         amount = st.number_input("Enter investment amount ($)", min_value=1000, value=10000, step=100)
