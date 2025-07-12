@@ -222,8 +222,8 @@ def main():
             st.write("*This return reflects the actual performance of the model-based allocation.*")
         with col2:
             st.info(f"**Historical Mean Allocation:**\n"
-            f"- SP500: ${hist_sp500_amt:,.0f} ({hist_sp500_weight:.1%})\n"
-            f"- T-Bills : ${hist_tbill_amt:,.0f} ({hist_tbill_weight:.1%})\n\n"
+            f"- SP500: ${hist_tbill_amt:,.0f} ({hist_tbill_weight:.1%})\n\n"
+            f"- T-Bills : ${hist_sp500_amt:,.0f} ({hist_sp500_weight:.1%})\n"
             f"**Expected Return:** ${expected_gain_hist:.2f} ({hist_return:.2f}%)")
             st.write("*This return reflects the actual performance of the historical mean allocation.*")
         
