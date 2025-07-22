@@ -27,6 +27,11 @@ portfolio_df = pd.read_csv("https://raw.githubusercontent.com/Ninokokhre29/sp500
 monthly_df = pd.read_csv('https://raw.githubusercontent.com/Ninokokhre29/sp500-portfolio-optimizer/master/monthly_comparison.csv')
 annual_df = pd.read_csv("https://raw.githubusercontent.com/Ninokokhre29/sp500-portfolio-optimizer/master/annual_comparison.csv")
 hist_df = pd.read_excel("https://raw.githubusercontent.com/Ninokokhre29/sp500-portfolio-optimizer/master/portfolio_returns%20top14%20(regular).xlsx")
+arima_df = pd.read_excel("https://raw.githubusercontent.com/Ninokokhre29/sp500-portfolio-optimizer/master/ARIMA%20(1%2C0%2C1).xlsx")
+ticker_port_df= pd.read_excel("https://raw.githubusercontent.com/Ninokokhre29/sp500-portfolio-optimizer/master/Weights%20(ARIMA%2C%2044%20tickers).xlsx")
+hist_ticker_port_df= pd.read_excel("https://raw.githubusercontent.com/Ninokokhre29/sp500-portfolio-optimizer/master/Weights%20(regular%2C%2044%20tickers).xlsx")
+ret_arima_df = pd.read_excel("https://raw.githubusercontent.com/Ninokokhre29/sp500-portfolio-optimizer/master/Monthly%20returns%20(ARIMA).xlsx")
+ret_regular_df = pd.read_excel("https://raw.githubusercontent.com/Ninokokhre29/sp500-portfolio-optimizer/master/Monthly%20returns%20(standard%2C%2044%20tickers).xlsx")
 predicted_df = portfolio_df.copy() 
 merged_df = pd.merge( predicted_df[["month", "SP500 weight", "Tbill weight", "portfolio_return"]], 
                      hist_df[["month", "SP500 weight", "Tbill weight", "portfolio_return"]], on="month", suffixes=("_pred", "_hist"))
@@ -142,8 +147,17 @@ def main():
         selected_date = st.date_input( "Select Date", value=min_date, min_value=min_date, max_value=max_date)
         selected_data = sp500_data[sp500_data['date'].dt.date <= selected_date]
         bond_data_filtered = bond_data[bond_data['observation_date'].dt.date <= selected_date]
+        ticker_list = list(ticker_port_df.columns[1:])
+        selected_ticker = st.selectbox("Select Ticker", ticker_list)
         
-        if not selected_data.empty:
+        if not selected_data.empty: 
+          ticker_list = list(ticker_port_df.columns[1:]) 
+          selected_ticker = st.selectbox("Select Ticker", ticker_list)
+          show_ticker_data = selected_ticker is not None and selected_ticker in ticker_port_df.columns 
+          
+          if show_ticker_data: 
+            col1, col2, col3 = st.columns(3) 
+          else:
             col1, col2 = st.columns(2)
             
             with col1:
@@ -170,6 +184,17 @@ def main():
                         <p class="{bond_color_class}">Direction: {bond_direction}</p>
                     </div>
                     """, unsafe_allow_html=True)
+                    
+             with col3:
+                 st.subheader(f"{selected_ticker} Performance")
+                 row = selected_data.iloc[-1] 
+                 direction_class = "prediction-up" if row['Direction'] == 'up' else "prediction-down" 
+                 st.markdown(f"""
+                <div class="metric-card">
+                    <p style="font-size: 1.5rem; font-weight: bold;">{row['y_pred']*100:.2f}%</p>
+                    <p class="{direction_class}">Direction: {row['Direction'].upper()}</p>
+                </div>
+                """, unsafe_allow_html=True)
         
         st.subheader("Historical Performance")
 
