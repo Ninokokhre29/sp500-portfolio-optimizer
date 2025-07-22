@@ -49,6 +49,7 @@ sp500_data['Direction'] = np.where(sp500_data['y_pred'] > sp500_data['y_true'].s
 predictions = sp500_data[['date', 'y_true', 'y_pred', 'Direction']].copy()
 bond_data['observation_date'] = pd.to_datetime(bond_data['observation_date'])
 bond_data['Direction'] = np.where(bond_data['DGS10'] > bond_data['DGS10'].shift(1), 'up', 'down')
+arima_df['Direction'] = np.where(arima_df['pred'] > arima_df['pred'].shift(1), 'up', 'down')
         
 def create_line_chart(data, x_col, y_col, title, color='#3b82f6', selected_date=None):
     fig = go.Figure()
@@ -147,15 +148,14 @@ def main():
         selected_date = st.date_input( "Select Date", value=min_date, min_value=min_date, max_value=max_date)
         selected_data = sp500_data[sp500_data['date'].dt.date <= selected_date]
         bond_data_filtered = bond_data[bond_data['observation_date'].dt.date <= selected_date]
-        ticker_list = list(ticker_port_df.columns[1:])
-        selected_ticker = st.selectbox("Select Ticker", ticker_list)
-        
+      
         if not selected_data.empty: 
-          ticker_list = list(ticker_port_df.columns[1:]) 
+          ticker_list = list(arima_df.columns[1:]) 
           selected_ticker = st.selectbox("Select Ticker", ticker_list)
-          show_ticker_data = selected_ticker is not None and selected_ticker in ticker_port_df.columns 
+          sel_ticker_df = arima_df[arima_df['ticker'] == selected_ticker]
+          sel_ticker_df_fil = sel_ticker_df[sel_ticker_df['forecast_date'].dt.date <= selected_date]
           
-          if show_ticker_data: 
+          if not : 
             col1, col2, col3 = st.columns(3) 
           else:
             col1, col2 = st.columns(2)
@@ -164,7 +164,6 @@ def main():
                 st.subheader("SP500 Performance")
                 row = selected_data.iloc[-1]
                 direction_class = "prediction-up" if row['Direction'] == 'up' else "prediction-down"
-    
                 st.markdown(f"""
                 <div class="metric-card">
                     <p style="font-size: 1.5rem; font-weight: bold;">{row['y_pred']*100:.2f}%</p>
@@ -176,25 +175,23 @@ def main():
                 st.subheader("10-Year Treasury Rate")
                 if not bond_data_filtered.empty:
                     latest_bond = bond_data_filtered.iloc[-1]
-                    bond_direction = latest_bond['Direction'].upper()
-                    bond_color_class = "prediction-up" if bond_direction == "UP" else "prediction-down"
+                    bond_color_class = "prediction-up" if latest_bond['Direction'] == "up" else "prediction-down"
                     st.markdown(f"""
                     <div class="metric-card">
                         <p style="font-size: 1.5rem; font-weight: bold;">{latest_bond['DGS10']:.2f}%</p>
-                        <p class="{bond_color_class}">Direction: {bond_direction}</p>
+                        <p class="{bond_color_class}">Direction: {latest_bond['Direction'].upper()}</p>
                     </div>
                     """, unsafe_allow_html=True)
                     
              with col3:
-                 st.subheader(f"{selected_ticker} Performance") 
-                 latest_row = ticker_port_df.iloc[-1]  
-                 if selected_ticker in latest_row: 
-                     latest_weight = latest_row[selected_ticker] 
-                     direction_class = "prediction-up" if latest_weight >= 0 else "prediction-down" 
+                 st.subheader(f"{selected_ticker} Performance")
+                 if not sel_ticker_df_fil.empty:
+                     latest_row = sel_ticker_df_fil.iloc[-1]  
+                     arima_color_class = "prediction-up" if latest_row['Direction'] == "up" else "prediction-down"
                      st.markdown(f"""
               <div class="metric-card"> 
-            <p style="font-size: 1.5rem; font-weight: bold;">{latest_weight:.2%}</p>
-            <p class="{direction_class}">Weight Change Direction: {'UP' if latest_weight >= 0 else 'DOWN'}</p>
+            <p style="font-size: 1.5rem; font-weight: bold;">{latest_row['pred']:.2%}</p>
+            <p class="{arima_color_class}">Direction: {latest_row['Direction'].upper()}</p>
         </div>
         """, unsafe_allow_html=True)
         
