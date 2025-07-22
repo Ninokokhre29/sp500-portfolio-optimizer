@@ -267,20 +267,20 @@ def main():
         
         col1, col2 = st.columns(2)
         with col1:
-            st.success(f"**ARIMA-Based Allocation:**\n"
+            st.success(f"**ARIMA-Based Allocation:**")
             for _, row in arima_month.iterrows():
                 stock_amt = amount * row["weight"]
                 st.markdown(f"- {row['index']}: ${stock_amt:,.2f} ({row['weight']:.2%})")
             gain_pred = amount * (pred_return / 100)     
-            st.markdown(f"**Expected Return:** ${gain_pred:,.2f} ({pred_return:.2f}%)"))
+            st.markdown(f"**Expected Return:** ${gain_pred:,.2f} ({pred_return:.2f}%)")
             st.write("*This return reflects the actual performance of the ARIMA-based allocation.*")
         with col2:
-            st.info(f"**Historical Mean Allocation:**\n"
+            st.info(f"**Historical Mean Allocation:**")
             for _, row in regular_month.iterrows():
                 stock_amt = amount * row["weight"]
                 st.markdown(f"- {row['index']}: ${stock_amt:,.2f} ({row['weight']:.2%})")
             gain_hist = amount * (pred_return / 100)     
-            st.markdown(f"**Expected Return:** ${gain_hist:,.2f} ({hist_return:.2f}%)"))
+            st.markdown(f"**Expected Return:** ${gain_hist:,.2f} ({hist_return:.2f}%)")
             st.write("*This return reflects the actual performance of the historical mean allocation.*")
         
     with tab5:
