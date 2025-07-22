@@ -157,6 +157,7 @@ def main():
         selected_data = sp500_data[sp500_data['date'].dt.date <= selected_date]
         bond_data_filtered = bond_data[bond_data['observation_date'].dt.date <= selected_date]
         sel_ticker_df = arima_df[arima_df['ticker'] == selected_ticker].copy()
+        st.write("All forecast dates for ticker", selected_ticker, ":", sel_ticker_df['forecast_date'].dt.strftime("%Y-%m-%d").tolist())
         sel_ticker_df['forecast_date'] = pd.to_datetime(sel_ticker_df['forecast_date']).dt.normalize()
         st.write("Available forecast dates for selected ticker:", sel_ticker_df['forecast_date'].unique()) 
         st.write("Selected date (normalized):", selected_date_dt) 
