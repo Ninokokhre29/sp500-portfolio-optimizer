@@ -153,10 +153,15 @@ def main():
         with col_select2:
             ticker_list = list(arima_df['ticker'].unique())
             selected_ticker = st.selectbox("Select Ticker", ticker_list)
-        
+        selected_date_dt = pd.to_datetime(selected_date).normalize()
         selected_data = sp500_data[sp500_data['date'].dt.date <= selected_date]
         bond_data_filtered = bond_data[bond_data['observation_date'].dt.date <= selected_date]
-      
+        sel_ticker_df = arima_df[arima_df['ticker'] == selected_ticker].copy()
+        sel_ticker_df['forecast_date'] = pd.to_datetime(sel_ticker_df['forecast_date']).dt.normalize()
+        st.write("Available forecast dates for selected ticker:", sel_ticker_df['forecast_date'].unique()) 
+        st.write("Selected date (normalized):", selected_date_dt) 
+        sel_ticker_df_fil = sel_ticker_df[sel_ticker_df['forecast_date'] == selected_date_dt]
+  
         if not selected_data.empty and selected_ticker: 
           sel_ticker_df = arima_df[arima_df['ticker'] == selected_ticker]
           sel_ticker_df['forecast_date'] = pd.to_datetime(sel_ticker_df['forecast_date']).dt.date 
