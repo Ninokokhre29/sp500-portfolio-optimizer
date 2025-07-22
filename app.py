@@ -147,13 +147,10 @@ def main():
             
     with tab2:
         st.header("Market Analysis")
-        
-        # Put date and ticker selection side by side
         col_select1, col_select2 = st.columns(2)
         with col_select1:
             selected_date = st.date_input("Select Date", value=min_date, min_value=min_date, max_value=max_date)
         with col_select2:
-            # Get ticker list from ARIMA dataframe
             ticker_list = list(arima_df['ticker'].unique())
             selected_ticker = st.selectbox("Select Ticker", ticker_list)
         
@@ -162,7 +159,6 @@ def main():
       
         if not selected_data.empty and selected_ticker: 
           sel_ticker_df = arima_df[arima_df['ticker'] == selected_ticker]
-          sel_ticker_df['forecast_date'] = pd.to_datetime(sel_ticker_df['forecast_date'])
           sel_ticker_df_fil = sel_ticker_df[sel_ticker_df['forecast_date'].dt.date <= selected_date]
           
           if not sel_ticker_df_fil.empty: 
