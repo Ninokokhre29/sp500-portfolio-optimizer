@@ -49,7 +49,9 @@ sp500_data['Direction'] = np.where(sp500_data['y_pred'] > sp500_data['y_true'].s
 predictions = sp500_data[['date', 'y_true', 'y_pred', 'Direction']].copy()
 bond_data['observation_date'] = pd.to_datetime(bond_data['observation_date'])
 bond_data['Direction'] = np.where(bond_data['DGS10'] > bond_data['DGS10'].shift(1), 'up', 'down')
-arima_df['Direction'] = np.where(arima_df['pred'] > arima_df['pred'].shift(1), 'up', 'down')
+arima_df['forecast_date'] = pd.to_datetime(arima_df['forecast_date'])
+arima_df = arima_df.sort_values(['ticker', 'forecast_date'])
+arima_df['Direction'] = arima_df.groupby('ticker')['pred'].apply(lambda x: np.where(x > x.shift(1), 'up', 'down')).reset_index(level=0, drop=True)
         
 def create_line_chart(data, x_col, y_col, title, color='#3b82f6', selected_date=None):
     fig = go.Figure()
@@ -151,36 +153,17 @@ def main():
         with col_select1:
             selected_date = st.date_input("Select Date", value=min_date, min_value=min_date, max_value=max_date)
         with col_select2:
-            # Debug: Check ARIMA dataframe structure
-            if 'ticker' in arima_df.columns:
-                ticker_list = list(arima_df['ticker'].unique())
-            else:
-                # Fallback to column names if ticker column doesn't exist
-                ticker_list = [col for col in arima_df.columns if col not in ['forecast_date', 'date']]
-            
-            if ticker_list:
-                selected_ticker = st.selectbox("Select Ticker", ticker_list)
-            else:
-                st.warning("No tickers found in the data")
-                selected_ticker = None
+            # Get ticker list from ARIMA dataframe
+            ticker_list = list(arima_df['ticker'].unique())
+            selected_ticker = st.selectbox("Select Ticker", ticker_list)
         
         selected_data = sp500_data[sp500_data['date'].dt.date <= selected_date]
         bond_data_filtered = bond_data[bond_data['observation_date'].dt.date <= selected_date]
       
         if not selected_data.empty and selected_ticker: 
-          if 'ticker' in arima_df.columns:
-              sel_ticker_df = arima_df[arima_df['ticker'] == selected_ticker]
-          else:
-              # If no ticker column, assume each row has data for selected ticker
-              sel_ticker_df = arima_df.copy()
-              
-          # Handle different date column names
-          date_col = 'forecast_date' if 'forecast_date' in sel_ticker_df.columns else 'date'
-          if date_col in sel_ticker_df.columns:
-              sel_ticker_df[date_col] = pd.to_datetime(sel_ticker_df[date_col])
-              sel_ticker_df_fil = sel_ticker_df[sel_ticker_df[date_col].dt.date <= selected_date]
-          else:
-              sel_ticker_df_fil = sel_ticker_df
+          sel_ticker_df = arima_df[arima_df['ticker'] == selected_ticker]
+          sel_ticker_df['forecast_date'] = pd.to_datetime(sel_ticker_df['forecast_date'])
+          sel_ticker_df_fil = sel_ticker_df[sel_ticker_df['forecast_date'].dt.date <= selected_date]
           
           if not sel_ticker_df_fil.empty: 
             col1, col2, col3 = st.columns(3) 
@@ -319,3 +302,4 @@ def main():
 
 if __name__ == "__main__":
     main()
+              
