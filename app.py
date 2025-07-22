@@ -263,7 +263,7 @@ def main():
             st.plotly_chart(pie2)
         
         st.subheader("Investment Recommendations")
-        amount = st.number_input("Enter investment amount ($)", min_value=1000, value=10000, step=100)
+        amount = st.number_input("Enter investment amount ($)", min_value=1000, value=10000, step=100,  key="investment_input")
         
         col1, col2 = st.columns(2)
         with col1:
