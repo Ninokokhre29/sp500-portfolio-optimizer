@@ -159,8 +159,10 @@ def main():
       
         if not selected_data.empty and selected_ticker: 
           sel_ticker_df = arima_df[arima_df['ticker'] == selected_ticker]
-          sel_ticker_df_fil = sel_ticker_df[sel_ticker_df['forecast_date'].dt.date <= selected_date]
-          
+          sel_ticker_df['forecast_date'] = pd.to_datetime(sel_ticker_df['forecast_date']).dt.date 
+          selected_date_only = pd.to_datetime(selected_date).date() 
+          sel_ticker_df_fil = sel_ticker_df[sel_ticker_df['forecast_date'] == selected_date_only]
+
           if not sel_ticker_df_fil.empty: 
             col1, col2, col3 = st.columns(3) 
           else:
