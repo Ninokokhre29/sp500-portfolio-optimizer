@@ -186,15 +186,17 @@ def main():
                     """, unsafe_allow_html=True)
                     
              with col3:
-                 st.subheader(f"{selected_ticker} Performance")
-                 row = selected_data.iloc[-1] 
-                 direction_class = "prediction-up" if row['Direction'] == 'up' else "prediction-down" 
-                 st.markdown(f"""
-                <div class="metric-card">
-                    <p style="font-size: 1.5rem; font-weight: bold;">{row['y_pred']*100:.2f}%</p>
-                    <p class="{direction_class}">Direction: {row['Direction'].upper()}</p>
-                </div>
-                """, unsafe_allow_html=True)
+                 st.subheader(f"{selected_ticker} Performance") 
+                 latest_row = ticker_port_df.iloc[-1]  
+                 if selected_ticker in latest_row: 
+                     latest_weight = latest_row[selected_ticker] 
+                     direction_class = "prediction-up" if latest_weight >= 0 else "prediction-down" 
+                     st.markdown(f"""
+              <div class="metric-card"> 
+            <p style="font-size: 1.5rem; font-weight: bold;">{latest_weight:.2%}</p>
+            <p class="{direction_class}">Weight Change Direction: {'UP' if latest_weight >= 0 else 'DOWN'}</p>
+        </div>
+        """, unsafe_allow_html=True)
         
         st.subheader("Historical Performance")
 
@@ -241,8 +243,8 @@ def main():
         col1, col2 = st.columns(2)
         with col1:
             st.success(f"**Predicted Allocation:**\n"
-               f"- SP500: ${sp500_amt:,.2f} ({sp500_weight:.3%})\n"
-               f"- T-Bills: ${tbill_amt:,.2f} ({tbill_weight:.3%})\n\n"
+               f"- SP500: ${sp500_amt:,.2f} ({sp500_weight:.2%})\n"
+               f"- T-Bills: ${tbill_amt:,.2f} ({tbill_weight:.2%})\n\n"
                f"**Expected Return:** ${expected_gain_pred:.2f} ({port_return:.2f}%)")       
             st.write("*This return reflects the actual performance of the model-based allocation.*")
         with col2:
