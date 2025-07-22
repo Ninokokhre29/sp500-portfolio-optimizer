@@ -163,6 +163,12 @@ def main():
           selected_date_only = pd.to_datetime(selected_date).date() 
           sel_ticker_df_fil = sel_ticker_df[sel_ticker_df['forecast_date'] == selected_date_only]
 
+          st.write("Available forecast dates for ticker:", sel_ticker_df['forecast_date'].dt.date.unique())  
+          st.write("Selected date:", selected_date_dt.date())
+          st.write(sel_ticker_df_fil)
+
+
+
           if not sel_ticker_df_fil.empty: 
             col1, col2, col3 = st.columns(3) 
           else:
