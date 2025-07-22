@@ -150,7 +150,7 @@ def main():
         bond_data_filtered = bond_data[bond_data['observation_date'].dt.date <= selected_date]
       
         if not selected_data.empty: 
-          ticker_list = list(arima_df.columns[1:]) 
+          ticker_list = list(arima_df['ticker']) 
           selected_ticker = st.selectbox("Select Ticker", ticker_list)
           sel_ticker_df = arima_df[arima_df['ticker'] == selected_ticker]
           sel_ticker_df_fil = sel_ticker_df[sel_ticker_df['forecast_date'].dt.date <= selected_date]
