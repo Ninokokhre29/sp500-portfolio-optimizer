@@ -155,7 +155,7 @@ def main():
           sel_ticker_df = arima_df[arima_df['ticker'] == selected_ticker]
           sel_ticker_df_fil = sel_ticker_df[sel_ticker_df['forecast_date'].dt.date <= selected_date]
           
-          if not : 
+          if not sel_ticker_df_fil.empty: 
             col1, col2, col3 = st.columns(3) 
           else:
             col1, col2 = st.columns(2)
@@ -183,17 +183,17 @@ def main():
                     </div>
                     """, unsafe_allow_html=True)
                     
-             with col3:
-                 st.subheader(f"{selected_ticker} Performance")
-                 if not sel_ticker_df_fil.empty:
-                     latest_row = sel_ticker_df_fil.iloc[-1]  
-                     arima_color_class = "prediction-up" if latest_row['Direction'] == "up" else "prediction-down"
-                     st.markdown(f"""
-              <div class="metric-card"> 
-            <p style="font-size: 1.5rem; font-weight: bold;">{latest_row['pred']:.2%}</p>
-            <p class="{arima_color_class}">Direction: {latest_row['Direction'].upper()}</p>
-        </div>
-        """, unsafe_allow_html=True)
+            if not sel_ticker_df_fil.empty:
+                with col3:
+                    st.subheader(f"{selected_ticker} Performance")
+                    latest_row = sel_ticker_df_fil.iloc[-1]  
+                    arima_color_class = "prediction-up" if latest_row['Direction'] == "up" else "prediction-down"
+                    st.markdown(f"""
+                    <div class="metric-card"> 
+                        <p style="font-size: 1.5rem; font-weight: bold;">{latest_row['pred']:.2%}</p>
+                        <p class="{arima_color_class}">Direction: {latest_row['Direction'].upper()}</p>
+                    </div>
+                    """, unsafe_allow_html=True)
         
         st.subheader("Historical Performance")
 
