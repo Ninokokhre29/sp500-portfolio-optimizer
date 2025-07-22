@@ -144,16 +144,43 @@ def main():
                     st.metric("Hit Rate", f"{metrics_row['hit_rate']:.2%}")
             
     with tab2:
-        st.header("Market Analysis") 
-        selected_date = st.date_input( "Select Date", value=min_date, min_value=min_date, max_value=max_date)
+        st.header("Market Analysis")
+        
+        # Put date and ticker selection side by side
+        col_select1, col_select2 = st.columns(2)
+        with col_select1:
+            selected_date = st.date_input("Select Date", value=min_date, min_value=min_date, max_value=max_date)
+        with col_select2:
+            # Debug: Check ARIMA dataframe structure
+            if 'ticker' in arima_df.columns:
+                ticker_list = list(arima_df['ticker'].unique())
+            else:
+                # Fallback to column names if ticker column doesn't exist
+                ticker_list = [col for col in arima_df.columns if col not in ['forecast_date', 'date']]
+            
+            if ticker_list:
+                selected_ticker = st.selectbox("Select Ticker", ticker_list)
+            else:
+                st.warning("No tickers found in the data")
+                selected_ticker = None
+        
         selected_data = sp500_data[sp500_data['date'].dt.date <= selected_date]
         bond_data_filtered = bond_data[bond_data['observation_date'].dt.date <= selected_date]
       
-        if not selected_data.empty: 
-          ticker_list = set(arima_df['ticker']) 
-          selected_ticker = st.selectbox("Select Ticker", ticker_list)
-          sel_ticker_df = arima_df[arima_df['ticker'] == selected_ticker]
-          sel_ticker_df_fil = sel_ticker_df[sel_ticker_df['forecast_date'].dt.date <= selected_date]
+        if not selected_data.empty and selected_ticker: 
+          if 'ticker' in arima_df.columns:
+              sel_ticker_df = arima_df[arima_df['ticker'] == selected_ticker]
+          else:
+              # If no ticker column, assume each row has data for selected ticker
+              sel_ticker_df = arima_df.copy()
+              
+          # Handle different date column names
+          date_col = 'forecast_date' if 'forecast_date' in sel_ticker_df.columns else 'date'
+          if date_col in sel_ticker_df.columns:
+              sel_ticker_df[date_col] = pd.to_datetime(sel_ticker_df[date_col])
+              sel_ticker_df_fil = sel_ticker_df[sel_ticker_df[date_col].dt.date <= selected_date]
+          else:
+              sel_ticker_df_fil = sel_ticker_df
           
           if not sel_ticker_df_fil.empty: 
             col1, col2, col3 = st.columns(3) 
