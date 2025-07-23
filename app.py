@@ -288,18 +288,27 @@ def main():
         if 'methodology' in annual_df.columns and 'portfolio return' in annual_df.columns:
             col1, col2 = st.columns(2)
             with col1:
-                st.subheader("Annual Return Comparison")
+                st.subheader("Annual Return Comparison : Portfolio 1")
                 if annual_df["portfolio return"].dtype == 'object':
                     annual_df["portfolio return"] = annual_df["portfolio return"].str.rstrip('%').astype(float)
                 bar_fig = px.bar( annual_df, x="methodology", y="portfolio return", color="methodology", color_discrete_sequence=["#4CAF50", "#FF9800"], labels={"portfolio return": "Return (%)"},
                     title="Annual Return: MV vs MV + LightGBM" )
                 st.plotly_chart(bar_fig, use_container_width=True)
 
+            data = { 
+            "methodology": ["MV", "MV + ARIMA"], 
+            "portfolio return": [8.91, 10.16],  
+            "Sharpe Ratio": [0.16, 0.39]}
+            
+            arima_annual_df = pd.DataFrame(data)
+
             with col2:
-                st.subheader("Sharpe Ratio")
-                if len(annual_df) >= 2:
-                    st.metric("MV", f"{annual_df.iloc[0]['Sharpe Ratio']:.2f}")
-                    st.metric("MV + LightGBM", f"{annual_df.iloc[1]['Sharpe Ratio']:.2f}")
+                st.subheader("Annual Return Comparison : Portfolio 2")
+                if arima_annual_df["portfolio return"].dtype == 'object':
+                    arima_annual_df["portfolio return"] = arima_annual_df["portfolio return"].str.rstrip('%').astype(float)
+                bar_fig = px.bar( arima_annual_df, x="methodology", y="portfolio return", color="methodology", color_discrete_sequence=["#4CAF50", "#FF9800"], labels={"portfolio return": "Return (%)"},
+                    title="Annual Return: MV vs MV + ARIMA" )
+                st.plotly_chart(bar_fig, use_container_width=True)
 
         if 'Date' in monthly_df.columns and 'Historical Mean' in monthly_df.columns and 'Predicted' in monthly_df.columns:
             st.subheader("Monthly Return Comparison")
