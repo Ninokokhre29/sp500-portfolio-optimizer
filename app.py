@@ -183,7 +183,7 @@ def main():
             st.plotly_chart(fig_bond, use_container_width=True)
             
     with tab3:
-        st.header("Investment Optimizer: Allocation of S&P 500 vs US 10 Year Treasury Note")
+        st.header("Investment Optimizer: S&P 500 VS US 10 Year Treasury Note")
         month_options = merged_df["month_label"].tolist()
         selected_label = st.selectbox("Select Month", month_options)
         selected_row = merged_df[merged_df["month_label"] == selected_label].iloc[0]
@@ -242,7 +242,7 @@ def main():
         st.plotly_chart(fig_hist, use_container_width=True)
         
     with tab4:
-        st.header("Investment Optimizer: 44-Stock Allocation")
+        st.header("Investment Optimizer: 44 Stock")
         month_options = sorted(arima_df["month_label"].unique())
         selected_month = st.selectbox("Select Month", month_options)
         arima_month = arima_df[arima_df["month_label"] == selected_month] 
