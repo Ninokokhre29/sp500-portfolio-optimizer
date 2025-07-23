@@ -294,12 +294,13 @@ def main():
                 bar_fig = px.bar( annual_df, x="methodology", y="portfolio return", color="methodology", color_discrete_sequence=["#4CAF50", "#FF9800"], labels={"portfolio return": "Return (%)"},
                     title="Annual Return: MV vs MV + LightGBM" )
                 st.plotly_chart(bar_fig, use_container_width=True)
+                st.subheader("Sharpe Ratio")
+                st.metric("MV", f"{annual_df.iloc[0]['Sharpe Ratio']:.2f}")
+                st.metric("MV + LightGBM", f"{annual_df.iloc[1]['Sharpe Ratio']:.2f}")
 
-            data = { 
-            "methodology": ["MV", "MV + ARIMA"], 
+            data = { "methodology": ["MV", "MV + ARIMA"], 
             "portfolio return": [8.91, 10.16],  
             "Sharpe Ratio": [0.16, 0.39]}
-            
             arima_annual_df = pd.DataFrame(data)
 
             with col2:
@@ -309,6 +310,9 @@ def main():
                 bar_fig = px.bar( arima_annual_df, x="methodology", y="portfolio return", color="methodology", color_discrete_sequence=["#4CAF50", "#FF9800"], labels={"portfolio return": "Return (%)"},
                     title="Annual Return: MV vs MV + ARIMA" )
                 st.plotly_chart(bar_fig, use_container_width=True)
+                st.subheader("Sharpe Ratio")
+                st.metric("MV", f"{arima_annual_df.iloc[0]['Sharpe Ratio']:.2f}")
+                st.metric("MV + ARIMA", f"{arima_annual_df.iloc[1]['Sharpe Ratio']:.2f}")
 
         if 'Date' in monthly_df.columns and 'Historical Mean' in monthly_df.columns and 'Predicted' in monthly_df.columns:
             st.subheader("Monthly Return Comparison")
