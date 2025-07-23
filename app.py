@@ -316,7 +316,7 @@ def main():
                 with col1a:
                     st.metric("MV", f"{arima_annual_df.iloc[0]['Sharpe Ratio']:.2f}") 
                 with col2b:
-                    st.metric("MV + LightGBM", f"{arima_annual_df.iloc[1]['Sharpe Ratio']:.2f}")
+                    st.metric("MV + ARIMA", f"{arima_annual_df.iloc[1]['Sharpe Ratio']:.2f}")
 
         if 'Date' in monthly_df.columns and 'Historical Mean' in monthly_df.columns and 'Predicted' in monthly_df.columns:
             st.subheader("Monthly Return Comparison")
